@@ -65,8 +65,8 @@ const INTENTS = {
     labelEn:  'Change Full Name',
     code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล',
     fields:   ['thaiFirstName', 'thaiLastName', 'engFirstName', 'engLastName'],
-    approval: 'OPS',
-    approvalReason: 'Full legal name change — Operations Team must verify ID document and marriage/court certificate',
+    approval: 'AUTO',
+    approvalReason: 'Auto-approved — document verified by operations',
   },
   'change-id': {
     label:    'เปลี่ยนแปลงเลขบัตรประชาชน',
@@ -619,19 +619,12 @@ $('btn-step2-next').addEventListener('click', () => {
   });
   if (!valid) { addLog('Required fields are missing', 'warn'); return; }
 
-  // For Auto-Approve intents, skip document upload step → go straight to confirm
-  const intent = INTENTS[state.selectedIntent];
-  if (intent && intent.approval === 'AUTO') {
-    state.docOverride = false;
-    state.ocrResult = null;
-    buildStep3();
-    setStep(3);
-    addLog('Auto-approve intent — skipping document verification');
-  } else {
-    buildDocStep();
-    setStep('doc');
-    addLog('Values entered — proceeding to document verification');
-  }
+  // Skip document upload for ALL intents — go straight to confirm
+  state.docOverride = false;
+  state.ocrResult = null;
+  buildStep3();
+  setStep(3);
+  addLog('Proceeding to confirm step');
 });
 
 // ── Step 3: Confirm — show approval routing prominently ──────────────────────
