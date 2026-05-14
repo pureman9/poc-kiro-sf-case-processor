@@ -136,8 +136,8 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
-- [ ] 5. Document Validator
-  - [ ] 5.1 Implement DocumentValidator
+- [x] 5. Document Validator
+  - [x] 5.1 Implement DocumentValidator
     - **Deps**: 2.1, 1.2 | **Ref**: `design/components.md` — DocumentValidator
     - Create `document_validator/validator.py` — `DocumentValidator` class
     - `validate(case: SFCase) -> ValidationResult`:
@@ -146,7 +146,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
       - Else → log each invalid doc (case_id, doc_id, status), return `ValidationResult(ok=False, reason="INVALID_DOCUMENT", doc_id=first_invalid.doc_id)`
     - Create `document_validator/models.py` — `ValidationResult` dataclass (ok, reason, doc_id)
 
-  - [ ] 5.2 Write unit tests for DocumentValidator
+  - [x] 5.2 Write unit tests for DocumentValidator
     - **Deps**: 5.1 | **Ref**: `design/components.md` — DocumentValidator Error Handling
     - Create `tests/unit/test_document_validator.py`
     - Test: no documents → `ok=False`, `reason=NO_DOCUMENT`
@@ -159,8 +159,8 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
-- [ ] 6. Customer Data Store
-  - [ ] 6.1 Implement CustomerDataStore
+- [x] 6. Customer Data Store
+  - [x] 6.1 Implement CustomerDataStore
     - **Deps**: 1.2, 1.3 | **Ref**: `design/components.md` — CustomerDataStore, `design/integration.md` — Atomic Write Pattern
     - Create `customer_data_store/store.py` — `CustomerDataStore` class
     - `__init__(data_path: str)`: validate file exists and is valid JSON; raise `StorageInitError` if not
@@ -172,7 +172,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
       - Log: CID + field_updated on success; CID + error on failure
     - Create `customer_data_store/models.py` — `CustomerRecord`, `UpdateResult` dataclasses
 
-  - [ ] 6.2 Write unit tests for CustomerDataStore
+  - [x] 6.2 Write unit tests for CustomerDataStore
     - **Deps**: 6.1 | **Ref**: `design/integration.md` — Test Scenarios
     - Create `tests/unit/test_customer_data_store.py` using `tmp_path` pytest fixture
     - Test: update `first_name` → only `first_name` changes, all other fields preserved
@@ -190,8 +190,6 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - **Deps**: 4.1 | **Ref**: `design/components.md` — PersonalInfoChangeProcessor
     - Create `intents/personal_info_change/field_map.py` — `INTENT_FIELD_MAP` dict
     - Map all known intent name strings to field names:
-      - `"ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ"` → `"first_name"`
-      - `"ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงนามสกุล"` → `"last_name"`
       - `"ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงคำนำหน้า"` → `"title"`
       - `"ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล"` → `"first_name"` (primary; handle both fields)
     - Define `SUPPORTED_INTENTS: list[str]` — all keys from the map
@@ -385,10 +383,10 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | 4.2 | Implement IntentRegistry | 4.1 | [x] |
 | 4.3 | Implement IntentAnalyzer | 4.2, 1.2 | [x] |
 | 4.4 | Write unit tests for IntentAnalyzer and IntentRegistry | 4.2, 4.3 | [x] |
-| 5.1 | Implement DocumentValidator | 2.1, 1.2 | [ ] |
-| 5.2 | Write unit tests for DocumentValidator | 5.1 | [ ] |
-| 6.1 | Implement CustomerDataStore | 1.2, 1.3 | [ ] |
-| 6.2 | Write unit tests for CustomerDataStore | 6.1 | [ ] |
+| 5.1 | Implement DocumentValidator | 2.1, 1.2 | [x] |
+| 5.2 | Write unit tests for DocumentValidator | 5.1 | [x] |
+| 6.1 | Implement CustomerDataStore | 1.2, 1.3 | [x] |
+| 6.2 | Write unit tests for CustomerDataStore | 6.1 | [x] |
 | 7.1 | Implement field mapping | 4.1 | [ ] |
 | 7.2 | Implement PersonalInfoChangeProcessor | 7.1, 5.1, 6.1, 4.1 | [ ] |
 | 7.3 | Write unit tests for PersonalInfoChangeProcessor | 7.2 | [ ] |
