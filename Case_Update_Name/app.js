@@ -392,7 +392,7 @@ $('btn-refresh-cases').addEventListener('click', async () => {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s for SF query
     const resp = await fetch(SF_API_URL, { signal: controller.signal });
     clearTimeout(timeoutId);
 
@@ -1411,7 +1411,7 @@ document.getElementById('btn-refresh-sf').addEventListener('click', async () => 
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout (SF query can be slow)
 
     const resp = await fetch(SF_API_URL, { signal: controller.signal });
     clearTimeout(timeoutId);

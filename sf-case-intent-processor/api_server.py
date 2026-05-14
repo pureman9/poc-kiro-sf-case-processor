@@ -20,7 +20,15 @@ from sf_case_extractor.extractor import SFCaseExtractor
 
 PORT = 5000
 config = load_config()
-extractor = SFCaseExtractor(config)
+extractor = None  # Lazy init — connect on first request
+
+
+def get_extractor():
+    """Lazy-initialize extractor on first API call."""
+    global extractor
+    if extractor is None:
+        extractor = SFCaseExtractor(config)
+    return extractor
 
 
 class APIHandler(BaseHTTPRequestHandler):
@@ -48,7 +56,8 @@ class APIHandler(BaseHTTPRequestHandler):
 
     def _handle_cases(self):
         try:
-            cases = extractor.extract(include_closed=False)
+            ext = get_extractor()
+            cases = ext.extract(include_closed=False)
             ui_cases = []
             for case in cases:
                 ui_cases.append({
