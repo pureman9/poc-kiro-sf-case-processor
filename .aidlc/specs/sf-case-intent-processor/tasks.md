@@ -185,16 +185,19 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
-- [ ] 7. PersonalInfoChangeProcessor & Intent Registration
-  - [ ] 7.1 Implement field mapping
+- [x] 7. PersonalInfoChangeProcessor & Intent Registration
+  - [x] 7.1 Implement field mapping
     - **Deps**: 4.1 | **Ref**: `design/components.md` — PersonalInfoChangeProcessor
     - Create `intents/personal_info_change/field_map.py` — `INTENT_FIELD_MAP` dict
     - Map all known intent name strings to field names:
       - `"ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงคำนำหน้า"` → `"title"`
       - `"ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล"` → `"first_name"` (primary; handle both fields)
+      - ขอใช้บริการ:CC - ข้อมูลส่วนตัว - ที่อยู่
+      - ขอใช้บริการ:CC - ข้อมูลส่วนตัว - เบอร์โทร
+      - ขอใช้บริการ:CC - ข้อมูลส่วนตัว - email
     - Define `SUPPORTED_INTENTS: list[str]` — all keys from the map
 
-  - [ ] 7.2 Implement PersonalInfoChangeProcessor
+  - [x] 7.2 Implement PersonalInfoChangeProcessor
     - **Deps**: 7.1, 5.1, 6.1, 4.1 | **Ref**: `design/components.md` — PersonalInfoChangeProcessor
     - Create `intents/personal_info_change/processor.py` — `PersonalInfoChangeProcessor(IntentProcessor)`
     - `__init__(doc_validator: DocumentValidator, data_store: CustomerDataStore)`
@@ -205,7 +208,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
       - Return `ProcessingResult(status=COMPLETED, field_updated=field, cid=case.cid)` on success
       - Return `ProcessingResult(status=FAILED, reason=result.reason)` on failure
 
-  - [ ] 7.3 Write unit tests for PersonalInfoChangeProcessor
+  - [x] 7.3 Write unit tests for PersonalInfoChangeProcessor
     - **Deps**: 7.2 | **Ref**: `design/components.md` — PersonalInfoChangeProcessor
     - Create `tests/unit/test_personal_info_processor.py` with `pytest-mock`
     - Test: validate() delegates to DocumentValidator
@@ -216,8 +219,8 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
-- [ ] 8. Pipeline Runner & Integration
-  - [ ] 8.1 Implement main.py pipeline runner
+- [x] 8. Pipeline Runner & Integration
+  - [x] 8.1 Implement main.py pipeline runner
     - **Deps**: 3.1, 4.3, 7.2 | **Ref**: `design/implementation.md` — Pipeline Runner
     - Create `main.py` — `build_registry()` and `run()` functions
     - `build_registry()`: instantiate `DocumentValidator`, `CustomerDataStore`, `PersonalInfoChangeProcessor`, register all `SUPPORTED_INTENTS`
@@ -387,10 +390,10 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | 5.2 | Write unit tests for DocumentValidator | 5.1 | [x] |
 | 6.1 | Implement CustomerDataStore | 1.2, 1.3 | [x] |
 | 6.2 | Write unit tests for CustomerDataStore | 6.1 | [x] |
-| 7.1 | Implement field mapping | 4.1 | [ ] |
-| 7.2 | Implement PersonalInfoChangeProcessor | 7.1, 5.1, 6.1, 4.1 | [ ] |
-| 7.3 | Write unit tests for PersonalInfoChangeProcessor | 7.2 | [ ] |
-| 8.1 | Implement main.py pipeline runner | 3.1, 4.3, 7.2 | [ ] |
+| 7.1 | Implement field mapping | 4.1 | [x] |
+| 7.2 | Implement PersonalInfoChangeProcessor | 7.1, 5.1, 6.1, 4.1 | [x] |
+| 7.3 | Write unit tests for PersonalInfoChangeProcessor | 7.2 | [x] |
+| 8.1 | Implement main.py pipeline runner | 3.1, 4.3, 7.2 | [x] |
 | 8.2 | Write integration test for full pipeline | 8.1 | [ ] |
 | 8.3 | Verify coverage and run full test suite | 8.2 | [ ] |
 | 9.1 | Implement Mobius API client | 1.2, 1.3 | [ ] |

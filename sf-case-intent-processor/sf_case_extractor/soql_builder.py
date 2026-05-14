@@ -1,41 +1,28 @@
 """SOQL query builder for Customer Information Update cases — real sandbox schema."""
 
-# Intent type prefix for Customer Information Update category
-DEFAULT_INTENT_TYPE_PREFIX = "CC - ข้อมูลส่วนตัว"
-
-# Specific intent type for name change (scope: this intent only)
-INTENT_NAME_CHANGE = "CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล"
-
-# Category value for personal data management
-CATEGORY_PERSONAL_DATA = "การจัดการข้อมูลส่วนบุคคล"
+from intents.personal_info_change.field_map import SUPPORTED_INTENTS, get_all_intent_type_prefixes
 
 
 def build_ciu_query(
-    intent_type: str = INTENT_NAME_CHANGE,
+    intent_types: list[str] | None = None,
     include_closed: bool = False,
     limit: int | None = None,
 ) -> str:
     """Build a SOQL query to fetch Customer Information Update cases.
 
-    Scoped to: CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล only.
-
-    Real Salesforce field mapping (from Case #00001659):
-        - Subject: full intent string
-        - Type__c: "CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล"
-        - Process_Add_Info_1__c: new first name
-        - Process_Add_Info_2__c: new last name
-        - Process_Add_Info_3__c: new title
-        - Process_Add_Info_4__c: old name
-        - Process_Add_Info_9__c: citizen ID (13 digits)
+    Dynamically builds WHERE clause from registered intents in field_map.py.
+    Adding a new intent to INTENT_FIELD_MAP automatically includes it in queries.
 
     Args:
-        intent_type: Exact Type__c value to filter. Default: name change intent.
+        intent_types: Specific Type__c values to filter. None = all registered intents.
         include_closed: If True, include closed cases (for testing). Default False.
         limit: Max records to return. None = no limit.
 
     Returns:
         A SOQL query string ready to execute via simple_salesforce.
     """
+    # Use provided list or all registered intents
+    types_to_query = intent_types or SUPPORTED_INTENTS
     fields = [
         "Id",
         "CaseNumber",
@@ -63,9 +50,16 @@ def build_ciu_query(
         "ClosedDate",
     ]
 
-    where_clauses = [
-        f"Type__c = '{intent_type}'",
-    ]
+    where_clauses = []
+
+    # Build intent filter — use IN clause for multiple intents
+    if len(types_to_query) == 1:
+        where_clauses.append(f"Type__c = '{types_to_query[0]}'")
+    else:
+        # Use OR with LIKE for each prefix to cover all sub-intents
+        prefixes = get_all_intent_type_prefixes()
+        prefix_conditions = [f"Type__c LIKE '{p}%'" for p in prefixes]
+        where_clauses.append(f"({' OR '.join(prefix_conditions)})")
 
     if not include_closed:
         where_clauses.append("Status != 'Closed'")

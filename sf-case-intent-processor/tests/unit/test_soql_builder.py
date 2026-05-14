@@ -1,6 +1,7 @@
 """Unit tests for SOQL query builder."""
 
-from sf_case_extractor.soql_builder import build_ciu_query, DEFAULT_INTENT_PREFIX
+from sf_case_extractor.soql_builder import build_ciu_query
+from intents.personal_info_change.field_map import SUPPORTED_INTENTS
 
 
 class TestBuildCiuQuery:
@@ -12,32 +13,36 @@ class TestBuildCiuQuery:
 
     def test_default_query_contains_intent_filter(self):
         query = build_ciu_query()
-        assert f"Intent_Name__c LIKE '{DEFAULT_INTENT_PREFIX}%'" in query
+        assert "Type__c LIKE 'CC - ข้อมูลส่วนตัว%'" in query
 
     def test_default_query_selects_required_fields(self):
         query = build_ciu_query()
         assert "Id" in query
-        assert "CID__c" in query
-        assert "Intent_Name__c" in query
+        assert "CaseNumber" in query
+        assert "Type__c" in query
         assert "Status" in query
-        assert "New_Value__c" in query
+        assert "Process_Add_Info_1__c" in query
 
-    def test_default_query_includes_verification_documents_subquery(self):
+    def test_include_closed_removes_status_filter(self):
+        query = build_ciu_query(include_closed=True)
+        assert "Status != 'Closed'" not in query
+
+    def test_limit_parameter(self):
+        query = build_ciu_query(limit=10)
+        assert "LIMIT 10" in query
+
+    def test_no_limit_by_default(self):
         query = build_ciu_query()
-        assert "VerificationDocuments__r" in query
-        assert "Status__c" in query
+        assert "LIMIT" not in query
 
-    def test_custom_intent_prefix(self):
-        custom_prefix = "Custom:Intent:Prefix"
-        query = build_ciu_query(intent_prefix=custom_prefix)
-        assert f"Intent_Name__c LIKE '{custom_prefix}%'" in query
-        assert DEFAULT_INTENT_PREFIX not in query
-
-    def test_query_is_single_string(self):
-        query = build_ciu_query()
-        assert isinstance(query, str)
-        assert len(query) > 50  # Sanity check — not empty
+    def test_single_intent_uses_exact_match(self):
+        query = build_ciu_query(intent_types=["CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล"])
+        assert "Type__c = 'CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล'" in query
 
     def test_query_from_case_table(self):
         query = build_ciu_query()
         assert "FROM Case" in query
+
+    def test_does_not_include_new_card_intent(self):
+        query = build_ciu_query()
+        assert "ขอบัตรใหม่" not in query
