@@ -232,21 +232,32 @@ function addLog(msg, type = 'info') {
 
 function currentCustomer() { return DB.getCustomer(state.currentCid); }
 function currentFieldValue(fk) {
-  // If we have a real SF case loaded, use its data
+  // If we have a real SF case loaded, show current values from case data
   if (state.currentSfCase) {
     const sfCase = state.currentSfCase;
     const map = {
-      title:     sfCase.newTitle || '—',
-      firstName: sfCase.newFirstName || '—',
-      lastName:  sfCase.newLastName || '—',
-      nationalId: sfCase.citizenId || '—',
-      dob:       '—',
+      // Name/Title — show current customer name from SF case
+      titleCode:      sfCase.newTitle || '—',
+      thaiFirstName:  sfCase.customerName ? sfCase.customerName.split(/\s+/)[0] : '—',
+      thaiLastName:   sfCase.customerName ? sfCase.customerName.split(/\s+/).slice(1).join(' ') : '—',
+      // Address — no current value from SF case
+      addressNumber:  '—',
+      moo:            '—',
+      soi:            '—',
+      thanon:         '—',
+      subDistrict:    '—',
+      district:       '—',
+      province:       '—',
+      zipCode:        '—',
+      // Contact
+      contactPhone:   '—',
+      contactEmail:   '—',
     };
     return map[fk] || '—';
   }
   // Fallback to mock DB
   const c = currentCustomer();
-  return c ? (c[FIELD_DEFS[fk].dbKey] || '') : '';
+  return c ? (c[FIELD_DEFS[fk]?.dbKey] || '') : '';
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
