@@ -6,7 +6,7 @@ created: "2026-05-13T00:00:00Z"
 updated: "2026-05-13T01:00:00Z"
 state:
   status: "active"
-  sharedPhases: ["context", "requirements", "design"]
+  sharedPhases: ["context", "requirements", "design", "tasks"]
   mode: "comprehensive"
   foundationSkipped: false
   implementationMode: null
@@ -30,6 +30,11 @@ artifacts:
       - "design/integration.md"
       - "design/implementation.md"
       - "design/nfr.md"
+  tasks:
+    status: "approved"
+    timestamp: "2026-05-14T00:00:00Z"
+    files:
+      - "tasks.md"
 implementation:
   totalTasks: 0
   completedTasks: 0
