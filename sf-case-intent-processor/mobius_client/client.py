@@ -263,6 +263,64 @@ class MobiusClient:
         logger.info(f"Mobius: updating address for customer {customer_id}")
         return self._post_request(url, headers, payload, f"address update for {customer_id}")
 
+    def update_customer_contact(
+        self,
+        customer_id: str,
+        contact_type_code: str,
+        contact_information: str,
+        contact_category: str = "PRI",
+    ) -> MobiusResult:
+        """Update customer contact (phone or email) in Mobius.
+
+        POST /party/cust-profile/{customerId}/Contacts
+
+        Contact Type Codes:
+            PM = Primary Mobile Phone
+            PE = Primary Email
+
+        Contact Category:
+            PRI = Primary
+
+        Args:
+            customer_id: CIF from search_customer_by_cid()
+            contact_type_code: "PM" for phone, "PE" for email
+            contact_information: phone number or email address
+            contact_category: default "PRI" (Primary)
+
+        Returns:
+            MobiusResult with ok=True on success.
+        """
+        url = f"{self.base_url}/party/cust-profile/{customer_id}/Contacts"
+        headers = {
+            **MOBIUS_HEADERS,
+            "requestUID": self._generate_uid(),
+            "correlationID": self._generate_uid(),
+            "channelCode": "CRDX",
+            "userId": "0014000011",
+            "lastUpdateUser": "CCRS",
+            "lastupdatechannel": "MB",
+            "channelstool": "M",
+        }
+
+        payload = {
+            "customerId": customer_id,
+            "contactTypeCode": contact_type_code,
+            "contactInformation": contact_information,
+            "contactCategory": contact_category,
+        }
+
+        contact_desc = "phone" if contact_type_code == "PM" else "email"
+        logger.info(f"Mobius: updating {contact_desc} for customer {customer_id}")
+        return self._post_request(url, headers, payload, f"{contact_desc} update for {customer_id}")
+
+    def update_customer_phone(self, customer_id: str, phone_number: str) -> MobiusResult:
+        """Update customer primary mobile phone."""
+        return self.update_customer_contact(customer_id, "PM", phone_number)
+
+    def update_customer_email(self, customer_id: str, email: str) -> MobiusResult:
+        """Update customer primary email."""
+        return self.update_customer_contact(customer_id, "PE", email)
+
     def _post_request(self, url: str, headers: dict, payload: dict, description: str) -> MobiusResult:
         """Execute a POST request with retry logic."""
         customer_id = payload.get("customerId", "")
