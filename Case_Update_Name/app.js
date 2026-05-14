@@ -1183,7 +1183,12 @@ document.getElementById('btn-refresh-sf').addEventListener('click', async () => 
   status.style.color = 'var(--sf-blue)';
 
   try {
-    const resp = await fetch(SF_API_URL);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+    const resp = await fetch(SF_API_URL, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
 
@@ -1194,13 +1199,15 @@ document.getElementById('btn-refresh-sf').addEventListener('click', async () => 
     status.style.color = 'var(--sf-green)';
     addLog(`SF Refresh: ${data.count} cases loaded from Salesforce`, 'success');
   } catch (e) {
-    status.textContent = `✗ ${e.message}`;
-    status.style.color = 'var(--sf-red)';
-
-    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+    if (e.name === 'AbortError') {
+      status.textContent = '✗ Timeout — API server not responding';
+    } else if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
       status.textContent = '✗ API server not running. Start: python api_server.py';
+    } else {
+      status.textContent = `✗ ${e.message}`;
     }
-    addLog(`SF Refresh failed: ${e.message}`, 'error');
+    status.style.color = 'var(--sf-red)';
+    addLog(`SF Refresh failed: ${e.message || e.name}`, 'error');
   } finally {
     btn.disabled = false;
     btn.textContent = '🔄 Refresh from Salesforce';
