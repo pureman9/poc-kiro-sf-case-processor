@@ -354,3 +354,37 @@ class MobiusClient:
                     return MobiusResult(ok=False, customer_id=customer_id, message=str(e))
 
         return MobiusResult(ok=False, customer_id=customer_id, message="Max retries exceeded")
+
+    def _put_request(self, url: str, headers: dict, payload: dict, description: str) -> MobiusResult:
+        """Execute a PUT request with retry logic."""
+        customer_id = payload.get("customerId", "")
+
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                resp = requests.put(url, json=payload, headers=headers, timeout=self.timeout)
+
+                if resp.status_code in (200, 201):
+                    data = resp.json() if resp.text else {}
+                    logger.info(f"Mobius: {description} — success")
+                    return MobiusResult(ok=True, customer_id=customer_id, status_code=resp.status_code, data=data)
+
+                if resp.status_code >= 500 and attempt < MAX_RETRIES:
+                    logger.warning(f"Mobius {description}: HTTP {resp.status_code} (attempt {attempt})")
+                    continue
+
+                return MobiusResult(
+                    ok=False, customer_id=customer_id,
+                    status_code=resp.status_code,
+                    message=f"HTTP {resp.status_code}: {resp.text[:200]}",
+                )
+
+            except requests.Timeout:
+                logger.warning(f"Mobius {description}: timeout (attempt {attempt})")
+                if attempt == MAX_RETRIES:
+                    return MobiusResult(ok=False, customer_id=customer_id, message="Timeout after 3 retries")
+            except requests.RequestException as e:
+                logger.error(f"Mobius {description}: request error — {e}")
+                if attempt == MAX_RETRIES:
+                    return MobiusResult(ok=False, customer_id=customer_id, message=str(e))
+
+        return MobiusResult(ok=False, customer_id=customer_id, message="Max retries exceeded")
