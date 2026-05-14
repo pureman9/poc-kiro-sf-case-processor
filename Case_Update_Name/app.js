@@ -321,6 +321,44 @@ $('customer-selector').addEventListener('change', e => {
   addLog(`Case changed to: #${e.target.value}`);
 });
 
+// Refresh cases from Salesforce API (same as SF Cases tab)
+$('btn-refresh-cases').addEventListener('click', async () => {
+  const btn    = $('btn-refresh-cases');
+  const status = $('cases-refresh-status');
+
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  status.textContent = 'Querying Salesforce...';
+  status.style.color = 'var(--sf-blue)';
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const resp = await fetch(SF_API_URL, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    localStorage.setItem('sfcc_sf_cases', JSON.stringify(data.cases));
+    populateCustomerSelector();
+
+    status.textContent = `✓ ${data.count} cases`;
+    status.style.color = 'var(--sf-green)';
+    addLog(`Refreshed: ${data.count} cases from Salesforce`, 'success');
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      status.textContent = '✗ Timeout';
+    } else {
+      status.textContent = '✗ Server not running';
+    }
+    status.style.color = 'var(--sf-red)';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Refresh';
+  }
+});
+
 function refreshCustomerPanel() {
   const c = currentCustomer();
   if (!c) return;
