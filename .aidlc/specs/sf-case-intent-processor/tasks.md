@@ -1,7 +1,7 @@
 # Implementation Tasks — SF Case Intent Processor
 
 ## Summary
-- **Total Tasks**: 40 tasks across 9 phases in 4 execution waves
+- **Total Tasks**: 46 tasks across 10 phases in 5 execution waves
 - **Strategy**: Component-First (build each module independently, integrate via pipeline runner)
 - **Testing**: Test-after (unit tests per component, integration test for full pipeline)
 - **Derived From**: 9 requirements, 5 components + Mobius client, 4 entities, 2 external integrations (Salesforce + Mobius)
@@ -296,6 +296,77 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
+- [ ] 10. Test Case Management & Jira Test Execution Integration
+  - [ ] 10.1 Define test cases from requirements
+    - **Deps**: 8.3 | **Ref**: `requirements.md` — R1–R9
+    - Create `tests/testcases/` directory
+    - Create `tests/testcases/test_cases.json` — structured test case registry with fields:
+      - `tc_id` (e.g., "TC-001"), `title`, `requirement` (R1–R9), `category` (unit/integration/e2e), `priority` (P1–P4), `preconditions`, `steps[]`, `expected_result`, `status` (PASS/FAIL/BLOCKED/NOT_RUN), `jira_key` (linked Jira issue)
+    - Define test cases covering:
+      - R1: SF extraction (TC-001 to TC-005) — query success, retry, timeout, auth fail, empty result
+      - R2: Intent identification (TC-006 to TC-009) — valid intent, missing, empty, unrecognized
+      - R3: Intent routing (TC-010 to TC-013) — correct processor, validation fail, no processor, exception
+      - R4: Document validation (TC-014 to TC-019) — no doc, valid doc, invalid doc, multiple docs, case-insensitive
+      - R5: Customer data update (TC-020 to TC-025) — correct field, preserve others, CID not found, storage error, atomic write
+      - R6: Extensibility (TC-026 to TC-029) — register new, duplicate rejection, missing methods, exact match
+      - R9: Mobius sync (TC-030 to TC-034) — success, timeout retry, 4xx no retry, best-effort, not configured
+    - Total: ~34 test cases mapped to requirements
+
+  - [ ] 10.2 Implement test case runner with result reporting
+    - **Deps**: 10.1, 8.3 | **Ref**: Test strategy
+    - Create `tests/runner.py` — custom test runner that:
+      - Runs `pytest` with JSON output (`--json-report` plugin or custom `conftest.py` hook)
+      - Maps pytest test function names to `tc_id` in `test_cases.json`
+      - Generates `tests/results/test_execution_{timestamp}.json` with: tc_id, title, status (PASS/FAIL/ERROR), duration, error_message, timestamp
+    - Add `pytest-json-report==1.5.0` to `requirements.txt`
+    - Create `tests/conftest.py` marker: `@pytest.mark.tc("TC-001")` to link test functions to test case IDs
+
+  - [ ] 10.3 Implement Jira connector module (placeholder)
+    - **Deps**: 10.2 | **Ref**: External system — Jira REST API
+    - Create `jira_connector/` module with `__init__.py`
+    - Create `jira_connector/client.py` — `JiraClient` class (placeholder for actual connection details)
+      - `__init__(base_url, api_token, project_key)`: store config
+      - `create_test_execution(test_plan_key: str, environment: str) -> str`: create Xray/Zephyr test execution in Jira, return execution key
+      - `update_test_result(execution_key: str, tc_id: str, status: str, comment: str) -> bool`: update individual test result
+      - `bulk_update_results(execution_key: str, results: list[dict]) -> bool`: batch update all test results
+    - Create `jira_connector/models.py` — `JiraConfig`, `TestExecutionResult` dataclasses
+    - Add env vars: `JIRA_BASE_URL`, `JIRA_API_TOKEN`, `JIRA_PROJECT_KEY`, `JIRA_TEST_PLAN_KEY`
+    - Add to `.env.example` with placeholder values
+    - **Note**: Actual Jira connection details (Xray vs Zephyr, API endpoints) to be provided later
+
+  - [ ] 10.4 Implement auto-sync: test results → Jira test execution
+    - **Deps**: 10.2, 10.3 | **Ref**: CI/CD integration
+    - Create `tests/sync_to_jira.py` — script that:
+      1. Reads latest `tests/results/test_execution_{latest}.json`
+      2. Creates a new Test Execution in Jira (or updates existing)
+      3. For each test case result: calls `jira_client.update_test_result()` with status mapping:
+         - pytest PASS → Jira "PASS"
+         - pytest FAIL → Jira "FAIL" + error message as comment
+         - pytest ERROR → Jira "BLOCKED" + traceback as comment
+         - pytest SKIP → Jira "NOT_EXECUTED"
+      4. Logs summary: "Synced {X} results to Jira execution {key}"
+    - Can be run manually: `python tests/sync_to_jira.py`
+    - Can be integrated into CI/CD as post-test step
+
+  - [ ] 10.5 Create test execution report generator
+    - **Deps**: 10.2 | **Ref**: Reporting
+    - Create `tests/report.py` — generates HTML test execution report
+    - Report includes: execution date, total/pass/fail/blocked counts, pass rate %, per-requirement coverage, per-test-case detail with steps and actual results
+    - Output: `tests/results/report_{timestamp}.html`
+    - Summary table: requirement → test cases → pass/fail status
+    - Can be attached to Jira test execution as evidence
+
+  - [ ] 10.6 Write unit tests for Jira connector
+    - **Deps**: 10.3 | **Ref**: Test strategy
+    - Create `tests/unit/test_jira_connector.py` with `pytest-mock`
+    - Test: create_test_execution → returns execution key
+    - Test: update_test_result → correct API call payload
+    - Test: bulk_update_results → batch API call
+    - Test: connection failure → graceful error (log + return False)
+    - Test: invalid API token → clear error message
+
+---
+
 ## Task Summary
 
 | Task | Title | Dependencies | Status |
@@ -330,6 +401,12 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | 9.4 | Add Mobius client to pipeline runner registration | 9.3, 8.1 | [ ] |
 | 9.5 | Write unit tests for Mobius client | 9.1, 9.2 | [ ] |
 | 9.6 | Write integration test for pipeline with Mobius sync | 9.3, 8.2 | [ ] |
+| 10.1 | Define test cases from requirements | 8.3 | [ ] |
+| 10.2 | Implement test case runner with result reporting | 10.1, 8.3 | [ ] |
+| 10.3 | Implement Jira connector module (placeholder) | 10.2 | [ ] |
+| 10.4 | Implement auto-sync: test results → Jira test execution | 10.2, 10.3 | [ ] |
+| 10.5 | Create test execution report generator | 10.2 | [ ] |
+| 10.6 | Write unit tests for Jira connector | 10.3 | [ ] |
 
 ---
 
@@ -377,6 +454,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | 2 | Phase 2 (Data Models), Phase 4 (Intent ABC), Phase 5 (DocumentValidator), Phase 6 (CustomerDataStore), Phase 9.1–9.2 (Mobius Client) | Yes — all independent |
 | 3 | Phase 3 (SFCaseExtractor), Phase 7 (PersonalInfoChangeProcessor + Mobius integration) | Yes — depend on Wave 2 only |
 | 4 | Phase 8 (Pipeline Runner & Integration), Phase 9.4–9.6 (Mobius pipeline integration + tests) | No — integrates all components |
+| 5 | Phase 10 (Test Case Management & Jira Integration) | No — requires all tests passing from Wave 4 |
 
 ### File Ownership Per Wave
 
@@ -390,6 +468,9 @@ Tasks organized by component, following the modular monolith architecture. Each 
 **Wave 3** (parallel):
 - Phase 3: `sf_case_extractor/extractor.py`, `tests/unit/test_extractor.py`
 - Phase 7 + 9.3: `intents/personal_info_change/field_map.py`, `intents/personal_info_change/processor.py`, `tests/unit/test_personal_info_processor.py`
+
+**Wave 5** (sequential):
+- Phase 10: `tests/testcases/`, `tests/runner.py`, `tests/sync_to_jira.py`, `tests/report.py`, `jira_connector/`, `tests/unit/test_jira_connector.py`
 
 ---
 
