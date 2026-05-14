@@ -1136,3 +1136,47 @@ $('btn-doc-next').addEventListener('click', () => {
   buildStep3();
   setStep(3);
 });
+
+// ── SF Cases tab (from Salesforce sandbox via sf_cases.json) ──────────────────
+function renderSfCasesTable() {
+  const cases = JSON.parse(localStorage.getItem('sfcc_sf_cases') || '[]');
+  const tbody = document.getElementById('sf-cases-table-body');
+  const empty = document.getElementById('sf-cases-empty');
+  const badge = document.getElementById('sf-cases-count');
+
+  if (badge) badge.textContent = `${cases.length} cases`;
+
+  if (!cases.length) {
+    if (tbody) tbody.innerHTML = '';
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+
+  if (tbody) {
+    tbody.innerHTML = cases.map(c => `
+      <tr>
+        <td><span style="font-family:monospace;font-weight:700">#${c.caseNumber}</span></td>
+        <td><span class="sf-badge sf-badge--open">${c.status}</span></td>
+        <td>${c.subStatus || '—'}</td>
+        <td style="font-weight:600">${c.customerName || '—'}</td>
+        <td class="mono">${c.citizenId || '—'}</td>
+        <td>${c.newFirstName ? '<span class="audit-after">' + c.newFirstName + '</span>' : '—'}</td>
+        <td>${c.newLastName ? '<span class="audit-after">' + c.newLastName + '</span>' : '—'}</td>
+        <td>${c.newTitle || '—'}</td>
+        <td style="color:var(--sf-gray-4)">${c.oldName || '—'}</td>
+        <td>${c.documents && c.documents.length ? c.documents.length + ' files' : '0'}</td>
+      </tr>`).join('');
+  }
+}
+
+// Hook into tab switching
+const origTabHandler = document.querySelectorAll('.sf-app-tab');
+origTabHandler.forEach(tab => {
+  tab.addEventListener('click', () => {
+    if (tab.dataset && tab.dataset.tab === 'sf-cases') renderSfCasesTable();
+  });
+});
+
+// Auto-render if SF cases tab is visible on load
+setTimeout(() => renderSfCasesTable(), 500);

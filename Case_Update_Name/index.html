@@ -53,7 +53,37 @@
       <button class="sf-app-tab" data-tab="approval-queue">🔔 Approval Queue</button>
       <button class="sf-app-tab" data-tab="customer-db">👥 Customer Database</button>
       <button class="sf-app-tab" data-tab="audit-log">📊 Audit Log</button>
+      <button class="sf-app-tab" data-tab="sf-cases">🔗 SF Cases</button>
       <a href="dashboard.html" target="_blank" class="sf-app-tab" style="text-decoration:none;margin-left:auto">📈 CEO Dashboard ↗</a>
+    </div>
+
+    <!-- ═══ SF Cases from Salesforce (synced) ═════════════════════════════════ -->
+    <div class="sf-tab-panel hidden" id="tab-sf-cases">
+      <div class="sf-card">
+        <div class="sf-card__header">
+          🔗 Salesforce Cases (Live from Sandbox)
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="sf-cases-count" class="sf-badge sf-badge--new">0 cases</span>
+            <span class="sf-badge sf-badge--open">Status ≠ Closed</span>
+          </div>
+        </div>
+        <div class="sf-table-wrap">
+          <table class="sf-table">
+            <thead><tr>
+              <th>Case #</th><th>Status</th><th>Sub Status</th><th>Customer</th>
+              <th>Citizen ID</th><th>New First Name</th><th>New Last Name</th>
+              <th>New Title</th><th>Old Name</th><th>Documents</th>
+            </tr></thead>
+            <tbody id="sf-cases-table-body"></tbody>
+          </table>
+          <div class="sf-table-empty hidden" id="sf-cases-empty">
+            <div style="text-align:center;padding:32px;color:var(--sf-gray-4)">
+              <div style="font-size:28px;margin-bottom:6px">🔗</div>
+              <div>No SF cases loaded. Run <code>python sync_to_ui.py</code> to fetch from Salesforce.</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ TAB 1: Case Processing ═══════════════════════════════════════════ -->
