@@ -73,8 +73,8 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
-- [ ] 3. SFCaseExtractor
-  - [ ] 3.1 Implement SFCaseExtractor class
+- [x] 3. SFCaseExtractor
+  - [x] 3.1 Implement SFCaseExtractor class
     - **Deps**: 2.1, 2.2, 1.3 | **Ref**: `design/components.md` — SFCaseExtractor, `design/integration.md` — Retry Logic
     - Create `sf_case_extractor/extractor.py` — `SFCaseExtractor` class
     - `__init__(config)`: initialize `simple_salesforce.Salesforce` client from config
@@ -84,7 +84,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - Map related list `VerificationDocuments__r` to `list[VerificationDocument]`
     - Log: extraction start, case count on success, retry warnings, final error
 
-  - [ ] 3.2 Implement error handling for Salesforce failures
+  - [x] 3.2 Implement error handling for Salesforce failures
     - **Deps**: 3.1 | **Ref**: `design/integration.md` — Error Handling table
     - Handle `SalesforceAuthenticationFailed` → raise `ExtractionError` immediately (no retry)
     - Handle `SalesforceExpiredSession` → re-authenticate once, retry query
@@ -93,7 +93,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - Handle HTTP 5xx → retry up to 3 times, then raise `ExtractionError`
     - Empty result → return `[]`, log "0 cases found matching criteria"
 
-  - [ ] 3.3 Write unit tests for SFCaseExtractor
+  - [x] 3.3 Write unit tests for SFCaseExtractor
     - **Deps**: 3.1, 3.2 | **Ref**: `design/integration.md` — Test Scenarios
     - Create `tests/unit/test_extractor.py` with `pytest-mock`
     - Test: successful query returns correct `SFCase` list
@@ -378,9 +378,9 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | 2.1 | Implement SFCase and VerificationDocument dataclasses | 1.2 | [x] |
 | 2.2 | Implement SOQL query builder | 2.1 | [x] |
 | 2.3 | Write unit tests for models and SOQL builder | 2.1, 2.2 | [x] |
-| 3.1 | Implement SFCaseExtractor class | 2.1, 2.2, 1.3 | [ ] |
-| 3.2 | Implement error handling for Salesforce failures | 3.1 | [ ] |
-| 3.3 | Write unit tests for SFCaseExtractor | 3.1, 3.2 | [ ] |
+| 3.1 | Implement SFCaseExtractor class | 2.1, 2.2, 1.3 | [x] |
+| 3.2 | Implement error handling for Salesforce failures | 3.1 | [x] |
+| 3.3 | Write unit tests for SFCaseExtractor | 3.1, 3.2 | [x] |
 | 4.1 | Implement IntentProcessor ABC | 1.2 | [ ] |
 | 4.2 | Implement IntentRegistry | 4.1 | [ ] |
 | 4.3 | Implement IntentAnalyzer | 4.2, 1.2 | [ ] |
