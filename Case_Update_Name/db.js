@@ -112,17 +112,3 @@ const DB = {
 
 // Auto-seed on load
 DB.seed();
-
-// ── Load Salesforce cases from sf_cases.json (if available) ───────────────────
-(async function loadSfCases() {
-  try {
-    const resp = await fetch('sf_cases.json');
-    if (resp.ok) {
-      const cases = await resp.json();
-      localStorage.setItem(DB_KEYS.sfCases, JSON.stringify(cases));
-      console.log(`[DB] Loaded ${cases.length} SF cases from sf_cases.json`);
-    }
-  } catch (e) {
-    console.log('[DB] sf_cases.json not found — using mock data only');
-  }
-})();
