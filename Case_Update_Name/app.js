@@ -1138,6 +1138,8 @@ $('btn-doc-next').addEventListener('click', () => {
 });
 
 // ── SF Cases tab (from Salesforce sandbox via sf_cases.json) ──────────────────
+const SF_API_URL = 'http://localhost:5000/api/cases';
+
 function renderSfCasesTable() {
   const cases = JSON.parse(localStorage.getItem('sfcc_sf_cases') || '[]');
   const tbody = document.getElementById('sf-cases-table-body');
@@ -1169,6 +1171,41 @@ function renderSfCasesTable() {
       </tr>`).join('');
   }
 }
+
+// Refresh button — live query from local API server
+document.getElementById('btn-refresh-sf').addEventListener('click', async () => {
+  const btn    = document.getElementById('btn-refresh-sf');
+  const status = document.getElementById('sf-refresh-status');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Querying...';
+  status.textContent = 'Connecting to Salesforce...';
+  status.style.color = 'var(--sf-blue)';
+
+  try {
+    const resp = await fetch(SF_API_URL);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    localStorage.setItem('sfcc_sf_cases', JSON.stringify(data.cases));
+    renderSfCasesTable();
+
+    status.textContent = `✓ ${data.count} cases loaded — ${new Date().toLocaleTimeString('th-TH')}`;
+    status.style.color = 'var(--sf-green)';
+    addLog(`SF Refresh: ${data.count} cases loaded from Salesforce`, 'success');
+  } catch (e) {
+    status.textContent = `✗ ${e.message}`;
+    status.style.color = 'var(--sf-red)';
+
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      status.textContent = '✗ API server not running. Start: python api_server.py';
+    }
+    addLog(`SF Refresh failed: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Refresh from Salesforce';
+  }
+});
 
 // Hook into tab switching
 const origTabHandler = document.querySelectorAll('.sf-app-tab');
