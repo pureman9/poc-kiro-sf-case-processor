@@ -156,6 +156,19 @@ function addLog(msg, type = 'info') {
 
 function currentCustomer() { return DB.getCustomer(state.currentCid); }
 function currentFieldValue(fk) {
+  // If we have a real SF case loaded, use its data
+  if (state.currentSfCase) {
+    const sfCase = state.currentSfCase;
+    const map = {
+      title:     sfCase.newTitle || '—',
+      firstName: sfCase.newFirstName || '—',
+      lastName:  sfCase.newLastName || '—',
+      nationalId: sfCase.citizenId || '—',
+      dob:       '—',
+    };
+    return map[fk] || '—';
+  }
+  // Fallback to mock DB
   const c = currentCustomer();
   return c ? (c[FIELD_DEFS[fk].dbKey] || '') : '';
 }
@@ -173,25 +186,89 @@ document.querySelectorAll('.sf-app-tab').forEach(tab => {
   });
 });
 
-// ── Customer selector ─────────────────────────────────────────────────────────
+// ── Case selector (from Salesforce data) ──────────────────────────────────────
 function populateCustomerSelector() {
   const sel = $('customer-selector');
   sel.innerHTML = '';
-  Object.values(DB.getAllCustomers()).forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.cid;
-    opt.textContent = `${c.cid} — ${c.title} ${c.firstName} ${c.lastName}`;
-    sel.appendChild(opt);
-  });
+
+  // Load SF cases from localStorage (populated by sf_cases_data.js or Refresh button)
+  const sfCases = JSON.parse(localStorage.getItem('sfcc_sf_cases') || '[]');
+
+  if (sfCases.length > 0) {
+    // Use real SF cases
+    sfCases.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.caseNumber;
+      opt.textContent = `#${c.caseNumber} — ${c.customerName || 'Unknown'} (${c.status})`;
+      opt.dataset.caseData = JSON.stringify(c);
+      sel.appendChild(opt);
+    });
+  } else {
+    // Fallback to mock customers if no SF cases
+    Object.values(DB.getAllCustomers()).forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.cid;
+      opt.textContent = `${c.cid} — ${c.title} ${c.firstName} ${c.lastName}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  // Set initial selection
   state.currentCid = sel.value;
-  refreshCustomerPanel();
+  loadSelectedCase();
+}
+
+function loadSelectedCase() {
+  const sel = $('customer-selector');
+  const selectedOpt = sel.options[sel.selectedIndex];
+  if (!selectedOpt) return;
+
+  const caseDataStr = selectedOpt.dataset.caseData;
+  if (caseDataStr) {
+    // Real SF case
+    const sfCase = JSON.parse(caseDataStr);
+    state.currentCid = sfCase.citizenId || sfCase.caseNumber;
+    state.currentSfCase = sfCase;
+    refreshFromSfCase(sfCase);
+  } else {
+    // Fallback mock
+    state.currentCid = sel.value;
+    state.currentSfCase = null;
+    refreshCustomerPanel();
+  }
+}
+
+function refreshFromSfCase(sfCase) {
+  // Update Case Details panel
+  $('header-case-id').textContent   = `Case #${sfCase.caseNumber}`;
+  $('breadcrumb-case').textContent  = `Case #${sfCase.caseNumber}`;
+  $('case-id-display').textContent  = sfCase.caseNumber;
+  $('case-cid-display').textContent = sfCase.citizenId || '—';
+  $('case-created').textContent     = sfCase.status + ' / ' + (sfCase.subStatus || '—');
+
+  // Update Customer Info panel from SF case data
+  $('customer-info-panel').innerHTML = [
+    ['Case #',       sfCase.caseNumber],
+    ['Status',       sfCase.status],
+    ['Sub Status',   sfCase.subStatus || '—'],
+    ['Customer',     sfCase.customerName || '—'],
+    ['Citizen ID',   sfCase.citizenId || '—'],
+    ['Intent',       sfCase.intentType || '—'],
+    ['New First',    sfCase.newFirstName || '—'],
+    ['New Last',     sfCase.newLastName || '—'],
+    ['New Title',    sfCase.newTitle || '—'],
+    ['Old Name',     sfCase.oldName || '—'],
+  ].map(([label, val]) => `
+    <div class="sf-detail-item">
+      <span class="sf-detail-label">${label}</span>
+      <span class="sf-detail-value">${val}</span>
+    </div>`).join('');
 }
 
 $('customer-selector').addEventListener('change', e => {
-  state.currentCid = e.target.value;
-  refreshCustomerPanel();
+  loadSelectedCase();
   resetToStep1(false);
-  addLog(`Customer changed to CID: ${state.currentCid}`);
+  addLog(`Case changed to: #${e.target.value}`);
 });
 
 function refreshCustomerPanel() {
