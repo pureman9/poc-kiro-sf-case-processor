@@ -111,7 +111,6 @@ const INTENTS = {
 };
 
 // ── Field definitions ─────────────────────────────────────────────────────────
-};
 const FIELD_DEFS = {
   title: {
     label:   'คำนำหน้า (Title)',
