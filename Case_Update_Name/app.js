@@ -618,9 +618,20 @@ $('btn-step2-next').addEventListener('click', () => {
     }
   });
   if (!valid) { addLog('Required fields are missing', 'warn'); return; }
-  buildDocStep();
-  setStep('doc');
-  addLog('Values entered — proceeding to document verification');
+
+  // For Auto-Approve intents, skip document upload step → go straight to confirm
+  const intent = INTENTS[state.selectedIntent];
+  if (intent && intent.approval === 'AUTO') {
+    state.docOverride = false;
+    state.ocrResult = null;
+    buildStep3();
+    setStep(3);
+    addLog('Auto-approve intent — skipping document verification');
+  } else {
+    buildDocStep();
+    setStep('doc');
+    addLog('Values entered — proceeding to document verification');
+  }
 });
 
 // ── Step 3: Confirm — show approval routing prominently ──────────────────────
