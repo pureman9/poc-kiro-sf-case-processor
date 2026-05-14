@@ -64,7 +64,7 @@ const INTENTS = {
     label:    'เปลี่ยนแปลงชื่อ-นามสกุล',
     labelEn:  'Change Full Name',
     code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล',
-    fields:   ['thaiFirstName', 'thaiLastName'],
+    fields:   ['thaiFirstName', 'thaiLastName', 'engFirstName', 'engLastName'],
     approval: 'OPS',
     approvalReason: 'Full legal name change — Operations Team must verify ID document and marriage/court certificate',
   },
@@ -131,6 +131,18 @@ const FIELD_DEFS = {
     hint:   'กรอกนามสกุลใหม่ภาษาไทย',
     type:   'text',
     dbKey:  'thaiLastName',
+  },
+  engFirstName: {
+    label:  'ชื่อภาษาอังกฤษ (English First Name)',
+    hint:   'e.g. Somchai',
+    type:   'text',
+    dbKey:  'engFirstName',
+  },
+  engLastName: {
+    label:  'นามสกุลภาษาอังกฤษ (English Last Name)',
+    hint:   'e.g. Saetang',
+    type:   'text',
+    dbKey:  'engLastName',
   },
 
   // ── Address (POST /party/cust-profile/address) ──────────────────────────────
@@ -240,6 +252,8 @@ function currentFieldValue(fk) {
       titleCode:      sfCase.newTitle || '—',
       thaiFirstName:  sfCase.customerName ? sfCase.customerName.split(/\s+/)[0] : '—',
       thaiLastName:   sfCase.customerName ? sfCase.customerName.split(/\s+/).slice(1).join(' ') : '—',
+      engFirstName:   '—',
+      engLastName:    '—',
       // Address — no current value from SF case
       addressNumber:  '—',
       moo:            '—',
