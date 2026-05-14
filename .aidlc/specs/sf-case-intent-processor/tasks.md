@@ -1,10 +1,10 @@
 # Implementation Tasks — SF Case Intent Processor
 
 ## Summary
-- **Total Tasks**: 34 tasks across 7 phases in 4 execution waves
+- **Total Tasks**: 40 tasks across 9 phases in 4 execution waves
 - **Strategy**: Component-First (build each module independently, integrate via pipeline runner)
 - **Testing**: Test-after (unit tests per component, integration test for full pipeline)
-- **Derived From**: 9 requirements, 5 components, 4 entities, 1 external integration (Salesforce)
+- **Derived From**: 9 requirements, 5 components + Mobius client, 4 entities, 2 external integrations (Salesforce + Mobius)
 
 ## Overview
 
@@ -246,6 +246,56 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
+- [ ] 9. Mobius API Integration — Sync Customer Name Update
+  - [ ] 9.1 Implement Mobius API client
+    - **Deps**: 1.2, 1.3 | **Ref**: External system — Mobius API
+    - Create `mobius_client/` module with `__init__.py`
+    - Create `mobius_client/client.py` — `MobiusClient` class
+    - `__init__(config)`: initialize HTTP client with Mobius API base URL, API key/token from config
+    - `update_customer_name(cid: str, title: str, first_name: str, last_name: str) -> MobiusResult`: POST/PUT to Mobius endpoint
+    - Add env vars to config: `MOBIUS_API_URL`, `MOBIUS_API_KEY`, `MOBIUS_TIMEOUT` (default 30s)
+    - Add to `.env.example`: `MOBIUS_API_URL=https://api.mobius.example.com/v1`, `MOBIUS_API_KEY=[your-key]`
+    - Create `mobius_client/models.py` — `MobiusResult` dataclass (ok, status_code, response_body, error)
+
+  - [ ] 9.2 Implement retry and error handling for Mobius API
+    - **Deps**: 9.1 | **Ref**: `design/nfr.md` — Retry pattern
+    - Retry up to 3 times on network timeout or HTTP 5xx
+    - No retry on HTTP 4xx (client error — bad request, unauthorized)
+    - Log: request start, success (CID + status code), retry warning, final failure
+    - Return `MobiusResult(ok=False, error=...)` on failure — do NOT raise exception (pipeline continues)
+
+  - [ ] 9.3 Integrate Mobius call into PersonalInfoChangeProcessor
+    - **Deps**: 9.1, 7.2 | **Ref**: `design/components.md` — PersonalInfoChangeProcessor
+    - Modify `PersonalInfoChangeProcessor.__init__()` to accept optional `MobiusClient`
+    - After successful `CustomerDataStore.update()`, call `mobius_client.update_customer_name(cid, title, first_name, last_name)`
+    - If Mobius call fails: log warning but still return `ProcessingResult(status=COMPLETED)` — local update succeeded, Mobius sync is best-effort
+    - Add `mobius_synced: bool` field to `ProcessingResult` to track sync status
+    - Log: "Mobius sync success — CID: {cid}" or "Mobius sync failed — CID: {cid}, error: {error}"
+
+  - [ ] 9.4 Add Mobius client to pipeline runner registration
+    - **Deps**: 9.3, 8.1 | **Ref**: `design/implementation.md` — Pipeline Runner
+    - Update `main.py` `build_registry()` to instantiate `MobiusClient(config)` and pass to `PersonalInfoChangeProcessor`
+    - Add `MOBIUS_API_URL` and `MOBIUS_API_KEY` to `config.py` `AppConfig`
+    - If `MOBIUS_API_URL` is not set → skip Mobius integration (log info: "Mobius API not configured — sync disabled")
+
+  - [ ] 9.5 Write unit tests for Mobius client
+    - **Deps**: 9.1, 9.2 | **Ref**: Test strategy
+    - Create `tests/unit/test_mobius_client.py` with `pytest-mock`
+    - Test: successful POST → `MobiusResult(ok=True, status_code=200)`
+    - Test: timeout → retries 3 times → `MobiusResult(ok=False, error="timeout")`
+    - Test: HTTP 401 → no retry → `MobiusResult(ok=False, error="unauthorized")`
+    - Test: HTTP 500 → retries 3 times → `MobiusResult(ok=False, error="server error")`
+    - Test: Mobius not configured (URL=None) → skip gracefully
+
+  - [ ] 9.6 Write integration test for pipeline with Mobius sync
+    - **Deps**: 9.3, 8.2 | **Ref**: Integration testing
+    - Add test case to `tests/integration/test_pipeline.py`
+    - Test: valid case → local update + Mobius API called with correct payload (mocked)
+    - Test: valid case + Mobius failure → local update succeeds, `mobius_synced=False` in result
+    - Test: Mobius not configured → pipeline runs normally without Mobius call
+
+---
+
 ## Task Summary
 
 | Task | Title | Dependencies | Status |
@@ -274,6 +324,12 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | 8.1 | Implement main.py pipeline runner | 3.1, 4.3, 7.2 | [ ] |
 | 8.2 | Write integration test for full pipeline | 8.1 | [ ] |
 | 8.3 | Verify coverage and run full test suite | 8.2 | [ ] |
+| 9.1 | Implement Mobius API client | 1.2, 1.3 | [ ] |
+| 9.2 | Implement retry and error handling for Mobius API | 9.1 | [ ] |
+| 9.3 | Integrate Mobius call into PersonalInfoChangeProcessor | 9.1, 7.2 | [ ] |
+| 9.4 | Add Mobius client to pipeline runner registration | 9.3, 8.1 | [ ] |
+| 9.5 | Write unit tests for Mobius client | 9.1, 9.2 | [ ] |
+| 9.6 | Write integration test for pipeline with Mobius sync | 9.3, 8.2 | [ ] |
 
 ---
 
@@ -318,9 +374,9 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | Wave | Phases | Can Run In Parallel |
 |------|--------|---------------------|
 | 1 | Phase 1 (Project Setup) | No — foundation for all |
-| 2 | Phase 2 (Data Models), Phase 4 (Intent ABC), Phase 5 (DocumentValidator), Phase 6 (CustomerDataStore) | Yes — all independent |
-| 3 | Phase 3 (SFCaseExtractor), Phase 7 (PersonalInfoChangeProcessor) | Yes — depend on Wave 2 only |
-| 4 | Phase 8 (Pipeline Runner & Integration) | No — integrates all components |
+| 2 | Phase 2 (Data Models), Phase 4 (Intent ABC), Phase 5 (DocumentValidator), Phase 6 (CustomerDataStore), Phase 9.1–9.2 (Mobius Client) | Yes — all independent |
+| 3 | Phase 3 (SFCaseExtractor), Phase 7 (PersonalInfoChangeProcessor + Mobius integration) | Yes — depend on Wave 2 only |
+| 4 | Phase 8 (Pipeline Runner & Integration), Phase 9.4–9.6 (Mobius pipeline integration + tests) | No — integrates all components |
 
 ### File Ownership Per Wave
 
@@ -329,10 +385,11 @@ Tasks organized by component, following the modular monolith architecture. Each 
 - Phase 4: `intent_analyzer/base_processor.py`, `intent_analyzer/registry.py`, `intent_analyzer/analyzer.py`, `intent_analyzer/exceptions.py`, `tests/unit/test_intent_registry.py`, `tests/unit/test_intent_analyzer.py`
 - Phase 5: `document_validator/validator.py`, `document_validator/models.py`, `tests/unit/test_document_validator.py`
 - Phase 6: `customer_data_store/store.py`, `customer_data_store/models.py`, `tests/unit/test_customer_data_store.py`
+- Phase 9.1–9.2: `mobius_client/client.py`, `mobius_client/models.py`, `tests/unit/test_mobius_client.py`
 
 **Wave 3** (parallel):
 - Phase 3: `sf_case_extractor/extractor.py`, `tests/unit/test_extractor.py`
-- Phase 7: `intents/personal_info_change/field_map.py`, `intents/personal_info_change/processor.py`, `tests/unit/test_personal_info_processor.py`
+- Phase 7 + 9.3: `intents/personal_info_change/field_map.py`, `intents/personal_info_change/processor.py`, `tests/unit/test_personal_info_processor.py`
 
 ---
 
