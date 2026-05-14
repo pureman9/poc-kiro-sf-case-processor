@@ -1,6 +1,6 @@
 """Minimal local API server for the Call Center UI.
 
-Provides a single endpoint that queries Salesforce sandbox and returns cases as JSON.
+Provides endpoints that query Salesforce sandbox and return cases as JSON.
 Run: python api_server.py
 Then the UI can call http://localhost:5000/api/cases
 """
@@ -9,7 +9,9 @@ import os
 import sys
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse
+import threading
 
 sys.path.insert(0, os.path.dirname(__file__))
 from dotenv import load_dotenv
@@ -20,15 +22,23 @@ from sf_case_extractor.extractor import SFCaseExtractor
 
 PORT = 5000
 config = load_config()
-extractor = None  # Lazy init — connect on first request
+extractor = None
+extractor_lock = threading.Lock()
 
 
 def get_extractor():
-    """Lazy-initialize extractor on first API call."""
+    """Lazy-initialize extractor on first API call (thread-safe)."""
     global extractor
     if extractor is None:
-        extractor = SFCaseExtractor(config)
+        with extractor_lock:
+            if extractor is None:
+                extractor = SFCaseExtractor(config)
     return extractor
+
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in separate threads so one slow query doesn't block all."""
+    daemon_threads = True
 
 
 class APIHandler(BaseHTTPRequestHandler):
@@ -95,7 +105,7 @@ class APIHandler(BaseHTTPRequestHandler):
 
 
 def main():
-    server = HTTPServer(('localhost', PORT), APIHandler)
+    server = ThreadedHTTPServer(('localhost', PORT), APIHandler)
     print(f"=" * 50)
     print(f"  SF Case API Server running on http://localhost:{PORT}")
     print(f"  Endpoints:")
