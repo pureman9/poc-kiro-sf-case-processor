@@ -1026,3 +1026,13 @@ body {
   font-family: var(--font);
 }
 .aat-cancel:hover { background: var(--sf-gray-1); color: var(--sf-gray-5); }
+
+/* ── Address form grid (2 columns) ──────────────────────── */
+.sf-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 600px) {
+  .sf-form-grid { grid-template-columns: 1fr; }
+}

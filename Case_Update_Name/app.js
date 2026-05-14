@@ -88,7 +88,7 @@ const INTENTS = {
     label:    'เปลี่ยนแปลงที่อยู่',
     labelEn:  'Change Address',
     code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว - ที่อยู่',
-    fields:   ['address'],
+    fields:   ['addressNumber', 'moo', 'soi', 'thanon', 'subDistrict', 'district', 'province', 'zipCode'],
     approval: 'AUTO',
     approvalReason: 'Address update — auto-approved with supporting document',
   },
@@ -149,6 +149,54 @@ const FIELD_DEFS = {
     hint:   'Enter the new address',
     type:   'text',
     dbKey:  'address',
+  },
+  addressNumber: {
+    label:  'บ้านเลขที่ (Address No.)',
+    hint:   'เช่น 66/8',
+    type:   'text',
+    dbKey:  'addressNumber',
+  },
+  moo: {
+    label:  'หมู่ (Moo)',
+    hint:   'เช่น 2',
+    type:   'text',
+    dbKey:  'moo',
+  },
+  soi: {
+    label:  'ซอย (Soi)',
+    hint:   'เช่น อารีย์ 23',
+    type:   'text',
+    dbKey:  'soi',
+  },
+  thanon: {
+    label:  'ถนน (Road)',
+    hint:   'เช่น รัชดาภิเษก',
+    type:   'text',
+    dbKey:  'thanon',
+  },
+  subDistrict: {
+    label:  'แขวง/ตำบล (Sub-District)',
+    hint:   'เช่น จตุจักร',
+    type:   'text',
+    dbKey:  'subDistrict',
+  },
+  district: {
+    label:  'เขต/อำเภอ (District)',
+    hint:   'เช่น จตุจักร',
+    type:   'text',
+    dbKey:  'district',
+  },
+  province: {
+    label:  'จังหวัด (Province)',
+    hint:   'เช่น กรุงเทพมหานคร',
+    type:   'text',
+    dbKey:  'province',
+  },
+  zipCode: {
+    label:  'รหัสไปรษณีย์ (Zip Code)',
+    hint:   'เช่น 10150',
+    type:   'text',
+    dbKey:  'zipCode',
   },
   phone: {
     label:  'หมายเลขโทรศัพท์ (Phone)',
@@ -482,9 +530,12 @@ function buildStep2() {
   const form = $('dynamic-form');
   form.innerHTML = '';
   const useRow = intent.fields.length === 2;
+  const useGrid = intent.fields.length > 2; // Address has 8 fields — use grid
   const wrapper = useRow
     ? Object.assign(document.createElement('div'), { className: 'sf-form-row' })
-    : form;
+    : useGrid
+      ? Object.assign(document.createElement('div'), { className: 'sf-form-grid' })
+      : form;
 
   intent.fields.forEach(fk => {
     const def = FIELD_DEFS[fk];
@@ -521,9 +572,9 @@ function buildStep2() {
     group.appendChild(currentDiv);
     group.appendChild(label);
     group.appendChild(input);
-    (useRow ? wrapper : form).appendChild(group);
+    (useRow || useGrid ? wrapper : form).appendChild(group);
   });
-  if (useRow) form.appendChild(wrapper);
+  if (useRow || useGrid) form.appendChild(wrapper);
 }
 
 $('btn-step2-back').addEventListener('click', () => setStep(1));
