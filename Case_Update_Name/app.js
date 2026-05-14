@@ -689,82 +689,63 @@ function buildStep3() {
 
 $('btn-step3-back').addEventListener('click', () => setStep('doc'));
 
-// ── Submit ────────────────────────────────────────────────────────────────────
-$('btn-submit').addEventListener('click', () => {
-  const intent   = INTENTS[state.selectedIntent];
-  const level    = APPROVAL[intent.approval];
-  const caseId   = `000${state.caseCounter}`;
-  const customer = currentCustomer();
+// ── Submit — calls API server → Mobius + SF Close ─────────────────────────────
+$('btn-submit').addEventListener('click', async () => {
+  const intent = INTENTS[state.selectedIntent];
+  const sfCase = state.currentSfCase;
+  const caseId = sfCase ? sfCase.caseId : '';
+  const citizenId = sfCase ? (sfCase.citizenId || '') : '';
 
   $('btn-submit').disabled = true;
   $('btn-submit').textContent = '⏳ Processing...';
+  addLog('Submitting to Mobius + Salesforce...');
 
-  setTimeout(() => {
+  try {
+    const payload = {
+      caseId: caseId,
+      caseNumber: sfCase ? sfCase.caseNumber : '',
+      citizenId: citizenId,
+      intentType: intent.code,
+      newValues: state.newValues,
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    const resp = await fetch(SF_API_URL.replace('/cases', '/submit'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    const result = await resp.json();
+
     const beforeValues = {};
     intent.fields.forEach(fk => { beforeValues[fk] = currentFieldValue(fk); });
 
-    if (intent.approval === 'AUTO') {
-      // Apply immediately
-      const fieldUpdates = {};
-      intent.fields.forEach(fk => { fieldUpdates[FIELD_DEFS[fk].dbKey] = state.newValues[fk]; });
-      DB.updateCustomer(state.currentCid, fieldUpdates);
-
-      intent.fields.forEach(fk => {
-        DB.addAuditEntry({
-          timestamp: new Date().toISOString(), caseId, cid: state.currentCid,
-          customerName: `${customer.title} ${customer.firstName} ${customer.lastName}`,
-          intentKey: state.selectedIntent, intentLabel: intent.label,
-          intentLabelEn: intent.labelEn, intentCode: intent.code,
-          fieldKey: fk, fieldLabel: FIELD_DEFS[fk].label.split(' (')[0],
-          beforeValue: beforeValues[fk], afterValue: state.newValues[fk],
-          agent: 'Call Center Agent', approvalLevel: 'AUTO', status: 'COMPLETED',
-        });
-      });
-
-      refreshCustomerPanel();
-      addLog(`✓ Auto-approved & applied — CID: ${state.currentCid}`, 'success');
-      state.caseCounter++;
-      showResult('auto', intent, beforeValues, caseId, null);
-
+    if (result.success) {
+      addLog('✓ All steps completed successfully', 'success');
     } else {
-      // Send to approval queue — do NOT update customer yet
-      const approvalId = DB.addApprovalRequest({
-        caseId, cid: state.currentCid,
-        customerName: `${customer.title} ${customer.firstName} ${customer.lastName}`,
-        intentKey: state.selectedIntent, intentLabel: intent.label,
-        intentLabelEn: intent.labelEn, intentCode: intent.code,
-        approvalLevel: intent.approval, approvalTeam: level.team,
-        fields: intent.fields.map(fk => ({
-          fieldKey: fk,
-          fieldLabel: FIELD_DEFS[fk].label.split(' (')[0],
-          beforeValue: beforeValues[fk],
-          afterValue: state.newValues[fk],
-        })),
-        agent: 'Call Center Agent',
-        approvalReason: intent.approvalReason,
-      });
-
-      // Write audit entry as PENDING
-      intent.fields.forEach(fk => {
-        DB.addAuditEntry({
-          timestamp: new Date().toISOString(), caseId, cid: state.currentCid,
-          customerName: `${customer.title} ${customer.firstName} ${customer.lastName}`,
-          intentKey: state.selectedIntent, intentLabel: intent.label,
-          intentLabelEn: intent.labelEn, intentCode: intent.code,
-          fieldKey: fk, fieldLabel: FIELD_DEFS[fk].label.split(' (')[0],
-          beforeValue: beforeValues[fk], afterValue: state.newValues[fk],
-          agent: 'Call Center Agent', approvalLevel: intent.approval,
-          approvalId, status: 'PENDING_APPROVAL',
-        });
-      });
-
-      addLog(`📤 Sent to ${level.team} for approval — ID: ${approvalId}`, 'warn');
-      state.caseCounter++;
-      showResult('pending', intent, beforeValues, caseId, approvalId);
+      addLog('⚠️ Some steps had issues — check details', 'warn');
     }
+    (result.steps || []).forEach(s => {
+      addLog(`  ${s.step}: ${s.ok ? '✓' : '✗'} ${s.error || s.cif || ''}`, s.ok ? 'success' : 'error');
+    });
 
+    showResult('auto', intent, beforeValues, sfCase ? sfCase.caseNumber : '', null);
     setStep('result');
-  }, 900);
+
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      addLog('✗ Timeout — server took too long (60s)', 'error');
+    } else {
+      addLog(`✗ Submit failed: ${e.message}`, 'error');
+    }
+    $('btn-submit').disabled = false;
+    $('btn-submit').textContent = '✓ Submit & Apply Now';
+  }
 });
 
 // ── Result ────────────────────────────────────────────────────────────────────

@@ -64,6 +64,17 @@ class APIHandler(BaseHTTPRequestHandler):
         else:
             self._respond(404, {"error": "Not found"})
 
+    def do_POST(self):
+        path = urlparse(self.path).path
+
+        if path == '/api/submit':
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            data = json.loads(body) if body else {}
+            self._handle_submit(data)
+        else:
+            self._respond(404, {"error": "Not found"})
+
     def _handle_cases(self):
         try:
             ext = get_extractor()
@@ -94,6 +105,99 @@ class APIHandler(BaseHTTPRequestHandler):
             self._respond(200, {"cases": ui_cases, "count": len(ui_cases)})
         except Exception as e:
             self._respond(500, {"error": str(e)})
+
+    def _handle_submit(self, data):
+        """Handle case submission: Mobius sync + SF case close."""
+        try:
+            from mobius_client.client import MobiusClient
+            from mobius_client.models import thai_title_to_mobius_code
+            from sf_case_extractor.case_updater import SFCaseUpdater
+
+            case_id = data.get("caseId", "")
+            citizen_id = data.get("citizenId", "")
+            intent_type = data.get("intentType", "")
+            new_values = data.get("newValues", {})
+
+            results = {"steps": []}
+
+            # Step 1: Search CIF by CID (if citizen ID available)
+            mobius = MobiusClient()
+            customer_id = None
+
+            if citizen_id and citizen_id != "—":
+                search = mobius.search_customer_by_cid(citizen_id)
+                if search.ok:
+                    customer_id = search.customer_id
+                    results["steps"].append({"step": "Search CIF", "ok": True, "cif": customer_id})
+                else:
+                    results["steps"].append({"step": "Search CIF", "ok": False, "error": search.message})
+            else:
+                results["steps"].append({"step": "Search CIF", "ok": False, "error": "No citizen ID"})
+
+            # Step 2: Update Mobius based on intent
+            if customer_id:
+                if "thaiFirstName" in new_values or "thaiLastName" in new_values:
+                    # Name update
+                    r = mobius.update_customer_name(
+                        customer_id=customer_id,
+                        title_code=new_values.get("titleCode"),
+                        thai_first_name=new_values.get("thaiFirstName"),
+                        thai_last_name=new_values.get("thaiLastName"),
+                        eng_first_name=new_values.get("engFirstName"),
+                        eng_last_name=new_values.get("engLastName"),
+                    )
+                    results["steps"].append({"step": "Mobius Update Name", "ok": r.ok, "message": r.message})
+
+                elif "titleCode" in new_values:
+                    # Title update
+                    r = mobius.update_customer_name(
+                        customer_id=customer_id,
+                        title_code=new_values.get("titleCode"),
+                    )
+                    results["steps"].append({"step": "Mobius Update Title", "ok": r.ok, "message": r.message})
+
+                elif "addressNumber" in new_values:
+                    # Address update
+                    r = mobius.update_customer_address(
+                        customer_id=customer_id,
+                        address_number=new_values.get("addressNumber", ""),
+                        moo=new_values.get("moo", ""),
+                        soi=new_values.get("soi", ""),
+                        thanon=new_values.get("thanon", ""),
+                        sub_district=new_values.get("subDistrict", ""),
+                        district=new_values.get("district", ""),
+                        province=new_values.get("province", ""),
+                        zip_code=new_values.get("zipCode", ""),
+                    )
+                    results["steps"].append({"step": "Mobius Update Address", "ok": r.ok, "message": r.message})
+
+                elif "contactPhone" in new_values:
+                    # Phone update
+                    r = mobius.update_customer_phone(customer_id, new_values["contactPhone"])
+                    results["steps"].append({"step": "Mobius Update Phone", "ok": r.ok, "message": r.message})
+
+                elif "contactEmail" in new_values:
+                    # Email update
+                    r = mobius.update_customer_email(customer_id, new_values["contactEmail"])
+                    results["steps"].append({"step": "Mobius Update Email", "ok": r.ok, "message": r.message})
+
+            # Step 3: Close SF case
+            if case_id:
+                try:
+                    ext = get_extractor()
+                    sf = ext._connect()
+                    updater = SFCaseUpdater(sf)
+                    closed = updater.close_case(case_id, sub_status="Done")
+                    results["steps"].append({"step": "Close SF Case", "ok": closed})
+                except Exception as e:
+                    results["steps"].append({"step": "Close SF Case", "ok": False, "error": str(e)})
+
+            all_ok = all(s.get("ok", False) for s in results["steps"])
+            results["success"] = all_ok
+            self._respond(200, results)
+
+        except Exception as e:
+            self._respond(500, {"error": str(e), "success": False})
 
     def _respond(self, status_code, data):
         self.send_response(status_code)
