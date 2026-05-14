@@ -56,7 +56,7 @@ const INTENTS = {
     label:    'เปลี่ยนแปลงคำนำหน้า',
     labelEn:  'Change Title / Prefix',
     code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงคำนำหน้า',
-    fields:   ['title'],
+    fields:   ['titleCode'],
     approval: 'AUTO',
     approvalReason: 'Low-risk prefix change — no legal impact',
   },
@@ -64,7 +64,7 @@ const INTENTS = {
     label:    'เปลี่ยนแปลงชื่อ-นามสกุล',
     labelEn:  'Change Full Name',
     code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล',
-    fields:   ['firstName', 'lastName'],
+    fields:   ['thaiFirstName', 'thaiLastName'],
     approval: 'OPS',
     approvalReason: 'Full legal name change — Operations Team must verify ID document and marriage/court certificate',
   },
@@ -96,7 +96,7 @@ const INTENTS = {
     label:    'เปลี่ยนแปลงหมายเลขโทรศัพท์',
     labelEn:  'Change Phone Number',
     code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว - หมายเลขโทรศัพท์ในการติดต่อ',
-    fields:   ['phone'],
+    fields:   ['contactPhone'],
     approval: 'AUTO',
     approvalReason: 'Phone number update — auto-approved (OTP verification)',
   },
@@ -104,7 +104,7 @@ const INTENTS = {
     label:    'เปลี่ยนแปลงอีเมล',
     labelEn:  'Change Email',
     code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว - อีเมล',
-    fields:   ['email'],
+    fields:   ['contactEmail'],
     approval: 'AUTO',
     approvalReason: 'Email update — auto-approved (OTP verification)',
   },
@@ -112,44 +112,28 @@ const INTENTS = {
 
 // ── Field definitions ─────────────────────────────────────────────────────────
 const FIELD_DEFS = {
-  title: {
-    label:   'คำนำหน้า (Title)',
-    hint:    'Select the new title / prefix',
+  // ── Name/Title (PUT /party/cust-profile) ────────────────────────────────────
+  titleCode: {
+    label:   'คำนำหน้า (Title Code)',
+    hint:    'เลือกคำนำหน้าใหม่',
     type:    'select',
-    options: ['นาย', 'นาง', 'นางสาว', 'Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'],
-    dbKey:   'title',
+    options: ['MR.', 'MRS.', 'MISS', 'นาย', 'นาง', 'นางสาว'],
+    dbKey:   'titleCode',
   },
-  firstName: {
-    label:  'ชื่อ (First Name)',
-    hint:   'Enter the new first name',
+  thaiFirstName: {
+    label:  'ชื่อ (Thai First Name)',
+    hint:   'กรอกชื่อใหม่ภาษาไทย',
     type:   'text',
-    dbKey:  'firstName',
+    dbKey:  'thaiFirstName',
   },
-  lastName: {
-    label:  'นามสกุล (Last Name)',
-    hint:   'Enter the new last name',
+  thaiLastName: {
+    label:  'นามสกุล (Thai Last Name)',
+    hint:   'กรอกนามสกุลใหม่ภาษาไทย',
     type:   'text',
-    dbKey:  'lastName',
+    dbKey:  'thaiLastName',
   },
-  nationalId: {
-    label:     'เลขบัตรประชาชน (National ID)',
-    hint:      'Enter 13-digit national ID number',
-    type:      'text',
-    maxlength: 13,
-    dbKey:     'nationalId',
-  },
-  dob: {
-    label:  'วันเกิด (Date of Birth)',
-    hint:   'Select the new date of birth',
-    type:   'date',
-    dbKey:  'dob',
-  },
-  address: {
-    label:  'ที่อยู่ (Address)',
-    hint:   'Enter the new address',
-    type:   'text',
-    dbKey:  'address',
-  },
+
+  // ── Address (POST /party/cust-profile/address) ──────────────────────────────
   addressNumber: {
     label:  'บ้านเลขที่ (Address No.)',
     hint:   'เช่น 66/8',
@@ -198,17 +182,19 @@ const FIELD_DEFS = {
     type:   'text',
     dbKey:  'zipCode',
   },
-  phone: {
-    label:  'หมายเลขโทรศัพท์ (Phone)',
-    hint:   'Enter the new phone number',
+
+  // ── Contact (POST /party/cust-profile/{cif}/Contacts) ───────────────────────
+  contactPhone: {
+    label:  'หมายเลขโทรศัพท์ (Phone Number)',
+    hint:   'เช่น 0891234567',
     type:   'text',
-    dbKey:  'phone',
+    dbKey:  'contactPhone',
   },
-  email: {
+  contactEmail: {
     label:  'อีเมล (Email)',
-    hint:   'Enter the new email address',
+    hint:   'เช่น name@company.com',
     type:   'text',
-    dbKey:  'email',
+    dbKey:  'contactEmail',
   },
 };
 
