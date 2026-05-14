@@ -631,7 +631,7 @@ $('btn-step2-next').addEventListener('click', () => {
 function buildStep3() {
   const intent = INTENTS[state.selectedIntent];
   const level  = APPROVAL[intent.approval];
-  const caseId = `000${state.caseCounter}`;
+  const caseId = state.currentSfCase ? state.currentSfCase.caseNumber : `000${state.caseCounter}`;
 
   // Approval routing banner
   $('approval-routing-banner').innerHTML = `
@@ -655,8 +655,10 @@ function buildStep3() {
     { label: 'Intent',      value: `${intent.label} — ${intent.labelEn}` },
   ];
   intent.fields.forEach(fk => {
-    rows.push({ label: FIELD_DEFS[fk].label.split(' (')[0],
-                oldValue: currentFieldValue(fk), newValue: state.newValues[fk] });
+    const def = FIELD_DEFS[fk];
+    const label = def ? def.label.split(' (')[0] : fk;
+    rows.push({ label: label,
+                oldValue: currentFieldValue(fk) || '—', newValue: state.newValues[fk] || '' });
   });
 
   $('confirm-box').innerHTML = rows.map(r => r.newValue !== undefined
