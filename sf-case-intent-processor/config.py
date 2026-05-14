@@ -46,10 +46,10 @@ def load_config() -> AppConfig:
     sf_security_token = os.getenv("SF_SECURITY_TOKEN", "")
     sf_domain = os.getenv("SF_DOMAIN", "login")
 
-    if not sf_username or not sf_password or not sf_security_token:
+    if not sf_username or not sf_password:
         raise ValueError(
             "Missing required Salesforce environment variables. "
-            "Set SF_USERNAME, SF_PASSWORD, and SF_SECURITY_TOKEN in .env file."
+            "Set SF_USERNAME and SF_PASSWORD in .env file."
         )
 
     return AppConfig(
