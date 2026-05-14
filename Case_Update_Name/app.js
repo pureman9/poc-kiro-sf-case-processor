@@ -84,9 +84,34 @@ const INTENTS = {
     approval: 'AUTO',
     approvalReason: 'Minor date correction — auto-approved with document on file',
   },
+  'change-address': {
+    label:    'เปลี่ยนแปลงที่อยู่',
+    labelEn:  'Change Address',
+    code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว - ที่อยู่',
+    fields:   ['address'],
+    approval: 'AUTO',
+    approvalReason: 'Address update — auto-approved with supporting document',
+  },
+  'change-phone': {
+    label:    'เปลี่ยนแปลงหมายเลขโทรศัพท์',
+    labelEn:  'Change Phone Number',
+    code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว - หมายเลขโทรศัพท์ในการติดต่อ',
+    fields:   ['phone'],
+    approval: 'AUTO',
+    approvalReason: 'Phone number update — auto-approved (OTP verification)',
+  },
+  'change-email': {
+    label:    'เปลี่ยนแปลงอีเมล',
+    labelEn:  'Change Email',
+    code:     'ขอใช้บริการ:CC - ข้อมูลส่วนตัว - อีเมล',
+    fields:   ['email'],
+    approval: 'AUTO',
+    approvalReason: 'Email update — auto-approved (OTP verification)',
+  },
 };
 
 // ── Field definitions ─────────────────────────────────────────────────────────
+};
 const FIELD_DEFS = {
   title: {
     label:   'คำนำหน้า (Title)',
@@ -119,6 +144,24 @@ const FIELD_DEFS = {
     hint:   'Select the new date of birth',
     type:   'date',
     dbKey:  'dob',
+  },
+  address: {
+    label:  'ที่อยู่ (Address)',
+    hint:   'Enter the new address',
+    type:   'text',
+    dbKey:  'address',
+  },
+  phone: {
+    label:  'หมายเลขโทรศัพท์ (Phone)',
+    hint:   'Enter the new phone number',
+    type:   'text',
+    dbKey:  'phone',
+  },
+  email: {
+    label:  'อีเมล (Email)',
+    hint:   'Enter the new email address',
+    type:   'text',
+    dbKey:  'email',
   },
 };
 
