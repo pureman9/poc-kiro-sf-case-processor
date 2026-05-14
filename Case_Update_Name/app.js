@@ -303,12 +303,13 @@ function populateCustomerSelector() {
   const sel = $('customer-selector');
   sel.innerHTML = '';
 
-  // Load SF cases — try global variable first (from sf_cases_data.js), then localStorage
+  // Load SF cases — prefer localStorage (fresh from Refresh), fallback to global variable
   let sfCases = [];
-  if (typeof SF_CASES_DATA !== 'undefined' && SF_CASES_DATA.length > 0) {
+  const storedCases = localStorage.getItem('sfcc_sf_cases');
+  if (storedCases) {
+    sfCases = JSON.parse(storedCases);
+  } else if (typeof SF_CASES_DATA !== 'undefined' && SF_CASES_DATA.length > 0) {
     sfCases = SF_CASES_DATA;
-  } else {
-    sfCases = JSON.parse(localStorage.getItem('sfcc_sf_cases') || '[]');
   }
 
   if (sfCases.length > 0) {
@@ -408,7 +409,8 @@ $('btn-refresh-cases').addEventListener('click', async () => {
     const data = await resp.json();
 
     localStorage.setItem('sfcc_sf_cases', JSON.stringify(data.cases));
-    populateCustomerSelector();
+    populateCustomerSelector(); // Reload dropdown with fresh data
+    renderSfCasesTable(); // Also update SF Cases tab if visible
 
     status.textContent = `✓ ${data.count} cases`;
     status.style.color = 'var(--sf-green)';
