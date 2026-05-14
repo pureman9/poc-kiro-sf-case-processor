@@ -61,12 +61,34 @@ def sync_to_mobius(case, mobius: MobiusClient, logger) -> bool:
         logger.warning(f"Case {case.case_id}: no intent config for Mobius sync")
         return False
 
-    # Build update params
+    target_fields = config.get("target_fields", [])
+
+    # ── Address update ─────────────────────────────────────────────────────────
+    if "address" in target_fields:
+        # For address, new_first_name contains the full address string from SF
+        address_text = case.new_first_name or ""
+        if not address_text:
+            logger.warning(f"Case {case.case_id}: no address data — skipping Mobius")
+            return False
+
+        update_result = mobius.update_customer_address(
+            customer_id=customer_id,
+            address_number=address_text,  # Full address in one field for now
+            address_type="H",  # Home address
+            address_format="L",  # Local standard
+        )
+
+        if update_result.ok:
+            logger.info(f"Case {case.case_id}: Mobius address sync SUCCESS — customerId={customer_id}")
+            return True
+        else:
+            logger.error(f"Case {case.case_id}: Mobius address update failed — {update_result.message}")
+            return False
+
+    # ── Name/Title update ──────────────────────────────────────────────────────
     title_code = None
     thai_first = None
     thai_last = None
-
-    target_fields = config.get("target_fields", [])
 
     if "title" in target_fields and case.new_title:
         title_code = thai_title_to_mobius_code(case.new_title)
@@ -146,14 +168,14 @@ def run():
 
         # Step 2: If completed, sync to Mobius
         if result.status == ProcessingStatus.COMPLETED:
-            # Only sync name/title changes to Mobius (not phone/email/address)
+            # Only sync name/title changes to Mobius (not phone/email)
             intent_config = get_intent_config(case.intent_name)
-            mobius_fields = {"first_name", "last_name", "title"}
+            mobius_fields = {"first_name", "last_name", "title", "address"}
             if intent_config and any(f in mobius_fields for f in intent_config.get("target_fields", [])):
                 mobius_ok = sync_to_mobius(case, mobius, logger)
                 result.mobius_synced = mobius_ok
             else:
-                logger.info(f"Case #{case.case_number}: skipping Mobius (not a name/title change)")
+                logger.info(f"Case #{case.case_number}: skipping Mobius (phone/email only)")
                 result.mobius_synced = False
 
             # Step 3: Close SF case

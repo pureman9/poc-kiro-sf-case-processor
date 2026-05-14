@@ -160,6 +160,102 @@ class MobiusClient:
             payload["engLastName"] = eng_last_name
 
         logger.info(f"Mobius: updating customer {customer_id} — fields: {list(payload.keys())}")
+        return self._put_request(url, headers, payload, f"name/title update for {customer_id}")
+
+    def update_customer_address(
+        self,
+        customer_id: str,
+        address_number: str = "",
+        moo: str = "",
+        soi: str = "",
+        thanon: str = "",
+        sub_district: str = "",
+        district: str = "",
+        province: str = "",
+        zip_code: str = "",
+        country: str = "TH",
+        address_type: str = "H",
+        address_format: str = "L",
+        address_category: str = "ADD",
+        floor: str = "",
+        unit: str = "",
+        building: str = "",
+        village: str = "",
+        trok: str = "",
+        city: str = "",
+        remark: str = "",
+    ) -> MobiusResult:
+        """Update customer address in Mobius.
+
+        PUT /party/cust-address (or similar endpoint)
+
+        Address Types:
+            E=Education, F=Census Registration, H=Home, I=ID Card,
+            M=ID+Census, O=Office, N=Nationality Home, A=Mailing, T=Temporary
+
+        Address Formats:
+            L=Local Standard, B=Building, F=International
+
+        Args:
+            customer_id: CIF from search_customer_by_cid()
+            address_number: บ้านเลขที่
+            moo: หมู่
+            soi: ซอย
+            thanon: ถนน
+            sub_district: แขวง/ตำบล
+            district: เขต/อำเภอ
+            province: จังหวัด
+            zip_code: รหัสไปรษณีย์
+            country: ประเทศ (default: TH)
+            address_type: ประเภทที่อยู่ (default: H=Home)
+            address_format: รูปแบบ (default: L=Local Standard)
+
+        Returns:
+            MobiusResult with ok=True on success.
+        """
+        url = f"{self.base_url}/party/cust-address"
+        headers = {
+            **MOBIUS_HEADERS,
+            "requestUID": self._generate_uid(),
+            "deviceId": "sf-case-processor",
+            "userId": "640000001",
+            "sessionId": self._generate_uid()[:8],
+            "accept-language": "EN",
+            "channels": "B",
+            "channelsTool": "M",
+            "lastUpdateUser": "CCRS",
+            "channelCode": "CRDX",
+        }
+
+        payload = {
+            "customerId": customer_id,
+            "addressFormat": address_format,
+            "addressType": address_type,
+            "addressCategory": address_category,
+            "addressNumber": address_number,
+            "floor": floor,
+            "unit": unit,
+            "building": building,
+            "village": village,
+            "trok": trok,
+            "moo": moo,
+            "soi": soi,
+            "subDistrict": sub_district,
+            "district": district,
+            "thanon": thanon,
+            "province": province,
+            "city": city,
+            "zipCode": zip_code,
+            "country": country,
+            "remark": remark,
+        }
+
+        logger.info(f"Mobius: updating address for customer {customer_id}")
+        return self._put_request(url, headers, payload, f"address update for {customer_id}")
+
+    def _put_request(self, url: str, headers: dict, payload: dict, description: str) -> MobiusResult:
+        """Execute a PUT request with retry logic."""
+        customer_id = payload.get("customerId", "")
 
         for attempt in range(1, MAX_RETRIES + 1):
             try:
@@ -167,14 +263,13 @@ class MobiusClient:
 
                 if resp.status_code in (200, 201):
                     data = resp.json() if resp.text else {}
-                    logger.info(f"Mobius: update successful for customer {customer_id}")
+                    logger.info(f"Mobius: {description} — success")
                     return MobiusResult(ok=True, customer_id=customer_id, status_code=resp.status_code, data=data)
 
                 if resp.status_code >= 500 and attempt < MAX_RETRIES:
-                    logger.warning(f"Mobius update: HTTP {resp.status_code} (attempt {attempt})")
+                    logger.warning(f"Mobius {description}: HTTP {resp.status_code} (attempt {attempt})")
                     continue
 
-                # 4xx or final 5xx
                 return MobiusResult(
                     ok=False, customer_id=customer_id,
                     status_code=resp.status_code,
@@ -182,11 +277,11 @@ class MobiusClient:
                 )
 
             except requests.Timeout:
-                logger.warning(f"Mobius update: timeout (attempt {attempt})")
+                logger.warning(f"Mobius {description}: timeout (attempt {attempt})")
                 if attempt == MAX_RETRIES:
                     return MobiusResult(ok=False, customer_id=customer_id, message="Timeout after 3 retries")
             except requests.RequestException as e:
-                logger.error(f"Mobius update: request error — {e}")
+                logger.error(f"Mobius {description}: request error — {e}")
                 if attempt == MAX_RETRIES:
                     return MobiusResult(ok=False, customer_id=customer_id, message=str(e))
 
