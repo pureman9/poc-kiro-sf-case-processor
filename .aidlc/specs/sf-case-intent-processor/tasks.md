@@ -24,8 +24,8 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
-- [ ] 1. Project Setup & Shared Foundation
-  - [ ] 1.1 Initialize project structure
+- [x] 1. Project Setup & Shared Foundation
+  - [x] 1.1 Initialize project structure
     - **Deps**: None | **Ref**: `design/implementation.md` — Directory Structure
     - Create directory layout: `sf_case_extractor/`, `intent_analyzer/`, `document_validator/`, `customer_data_store/`, `intents/personal_info_change/`, `shared/`, `tests/unit/`, `tests/integration/`, `data/`
     - Add `__init__.py` to each package directory
@@ -33,19 +33,19 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - Create `.env.example` with all required variables: `SF_USERNAME`, `SF_PASSWORD`, `SF_SECURITY_TOKEN`, `SF_DOMAIN`, `CUSTOMER_DATA_PATH`, `LOG_LEVEL`
     - Create `.gitignore` — exclude `.env`, `__pycache__/`, `.venv/`, `*.pyc`, `data/customer_data.json`
 
-  - [ ] 1.2 Implement shared models
+  - [x] 1.2 Implement shared models
     - **Deps**: 1.1 | **Ref**: `design/data-model.md` — ProcessingResult, ValidationResult
     - Create `shared/models.py` — `ProcessingStatus` enum (COMPLETED, SKIPPED, FAILED), `ProcessingResult` dataclass, `ValidationResult` dataclass
     - Create `shared/exceptions.py` — `ExtractionError`, `StorageInitError`, `CIDNotFoundError`, `RegistrationError`
     - Create `shared/logger.py` — `JsonFormatter` class, `setup_logger()` function with structured JSON output
 
-  - [ ] 1.3 Implement config loader
+  - [x] 1.3 Implement config loader
     - **Deps**: 1.1 | **Ref**: `design/implementation.md` — Environment Variables
     - Create `config.py` — `AppConfig` dataclass, `load_config()` function using `python-dotenv`
     - Validate required env vars on load; raise `ValueError` with clear message if missing
     - Set defaults: `CUSTOMER_DATA_PATH=./data/customer_data.json`, `LOG_LEVEL=INFO`
 
-  - [ ] 1.4 Create seed customer data file
+  - [x] 1.4 Create seed customer data file
     - **Deps**: 1.1 | **Ref**: `design/data-model.md` — CustomerRecord JSON format
     - Create `data/customer_data.json` with 8 sample Thai customer records
     - Each record: `cid`, `first_name`, `title`, `last_name`, `national_id`, `dob`, `phone`, `email`
@@ -53,20 +53,20 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
-- [ ] 2. SFCase Data Models & SOQL Builder
-  - [ ] 2.1 Implement SFCase and VerificationDocument dataclasses
+- [x] 2. SFCase Data Models & SOQL Builder
+  - [x] 2.1 Implement SFCase and VerificationDocument dataclasses
     - **Deps**: 1.2 | **Ref**: `design/data-model.md` — SFCase, VerificationDocument
     - Create `sf_case_extractor/models.py` — `SFCase` dataclass, `VerificationDocument` dataclass with `is_valid()` method
     - `VerificationDocument.is_valid()`: `status.strip().lower() in {"ok", "valid"}`
     - Include `__post_init__` validation: `case_id` and `cid` must be non-empty strings
 
-  - [ ] 2.2 Implement SOQL query builder
+  - [x] 2.2 Implement SOQL query builder
     - **Deps**: 2.1 | **Ref**: `design/integration.md` — SOQL Query
     - Create `sf_case_extractor/soql_builder.py` — `build_ciu_query()` function
     - Query: `SELECT Id, CID__c, Intent_Name__c, Status, New_Value__c, (SELECT Id, Status__c FROM VerificationDocuments__r) FROM Case WHERE Status != 'Closed' AND Intent_Name__c LIKE 'ขอใช้บริการ:CC - ข้อมูลส่วนตัว%'`
     - Make intent prefix configurable via parameter (default: `'ขอใช้บริการ:CC - ข้อมูลส่วนตัว%'`)
 
-  - [ ] 2.3 Write unit tests for models and SOQL builder
+  - [x] 2.3 Write unit tests for models and SOQL builder
     - **Deps**: 2.1, 2.2 | **Ref**: `design/integration.md` — Test Scenarios
     - `tests/unit/test_extractor_models.py`: test `VerificationDocument.is_valid()` with "OK", "valid", "ok", "VALID", "PENDING", ""
     - `tests/unit/test_soql_builder.py`: test query string contains correct WHERE clause, test custom intent prefix
@@ -371,13 +371,13 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 | Task | Title | Dependencies | Status |
 |------|-------|--------------|--------|
-| 1.1 | Initialize project structure | None | [ ] |
-| 1.2 | Implement shared models | 1.1 | [ ] |
-| 1.3 | Implement config loader | 1.1 | [ ] |
-| 1.4 | Create seed customer data file | 1.1 | [ ] |
-| 2.1 | Implement SFCase and VerificationDocument dataclasses | 1.2 | [ ] |
-| 2.2 | Implement SOQL query builder | 2.1 | [ ] |
-| 2.3 | Write unit tests for models and SOQL builder | 2.1, 2.2 | [ ] |
+| 1.1 | Initialize project structure | None | [x] |
+| 1.2 | Implement shared models | 1.1 | [x] |
+| 1.3 | Implement config loader | 1.1 | [x] |
+| 1.4 | Create seed customer data file | 1.1 | [x] |
+| 2.1 | Implement SFCase and VerificationDocument dataclasses | 1.2 | [x] |
+| 2.2 | Implement SOQL query builder | 2.1 | [x] |
+| 2.3 | Write unit tests for models and SOQL builder | 2.1, 2.2 | [x] |
 | 3.1 | Implement SFCaseExtractor class | 2.1, 2.2, 1.3 | [ ] |
 | 3.2 | Implement error handling for Salesforce failures | 3.1 | [ ] |
 | 3.3 | Write unit tests for SFCaseExtractor | 3.1, 3.2 | [ ] |
