@@ -1,6 +1,7 @@
 simple-salesforce==1.12.5
 python-dotenv==1.0.1
 filelock==3.13.1
+requests==2.32.3
 pytest==8.2.0
 pytest-mock==3.14.0
 pytest-json-report==1.5.0

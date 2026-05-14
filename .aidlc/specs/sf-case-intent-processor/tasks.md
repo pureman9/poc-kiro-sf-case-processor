@@ -247,8 +247,8 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
-- [ ] 9. Mobius API Integration — Sync Customer Name Update
-  - [ ] 9.1 Implement Mobius API client
+- [x] 9. Mobius API Integration — Sync Customer Name Update
+  - [x] 9.1 Implement Mobius API client
     - **Deps**: 1.2, 1.3 | **Ref**: External system — Mobius API
     - Create `mobius_client/` module with `__init__.py`
     - Create `mobius_client/client.py` — `MobiusClient` class
@@ -258,14 +258,14 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - Add to `.env.example`: `MOBIUS_API_URL=https://api.mobius.example.com/v1`, `MOBIUS_API_KEY=[your-key]`
     - Create `mobius_client/models.py` — `MobiusResult` dataclass (ok, status_code, response_body, error)
 
-  - [ ] 9.2 Implement retry and error handling for Mobius API
+  - [x] 9.2 Implement retry and error handling for Mobius API
     - **Deps**: 9.1 | **Ref**: `design/nfr.md` — Retry pattern
     - Retry up to 3 times on network timeout or HTTP 5xx
     - No retry on HTTP 4xx (client error — bad request, unauthorized)
     - Log: request start, success (CID + status code), retry warning, final failure
     - Return `MobiusResult(ok=False, error=...)` on failure — do NOT raise exception (pipeline continues)
 
-  - [ ] 9.3 Integrate Mobius call into PersonalInfoChangeProcessor
+  - [x] 9.3 Integrate Mobius call into PersonalInfoChangeProcessor
     - **Deps**: 9.1, 7.2 | **Ref**: `design/components.md` — PersonalInfoChangeProcessor
     - Modify `PersonalInfoChangeProcessor.__init__()` to accept optional `MobiusClient`
     - After successful `CustomerDataStore.update()`, call `mobius_client.update_customer_name(cid, title, first_name, last_name)`
@@ -273,7 +273,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - Add `mobius_synced: bool` field to `ProcessingResult` to track sync status
     - Log: "Mobius sync success — CID: {cid}" or "Mobius sync failed — CID: {cid}, error: {error}"
 
-  - [ ] 9.4 Add Mobius client to pipeline runner registration
+  - [x] 9.4 Add Mobius client to pipeline runner registration
     - **Deps**: 9.3, 8.1 | **Ref**: `design/implementation.md` — Pipeline Runner
     - Update `main.py` `build_registry()` to instantiate `MobiusClient(config)` and pass to `PersonalInfoChangeProcessor`
     - Add `MOBIUS_API_URL` and `MOBIUS_API_KEY` to `config.py` `AppConfig`
@@ -396,10 +396,10 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | 8.1 | Implement main.py pipeline runner | 3.1, 4.3, 7.2 | [x] |
 | 8.2 | Write integration test for full pipeline | 8.1 | [x] |
 | 8.3 | Verify coverage and run full test suite | 8.2 | [x] |
-| 9.1 | Implement Mobius API client | 1.2, 1.3 | [ ] |
-| 9.2 | Implement retry and error handling for Mobius API | 9.1 | [ ] |
-| 9.3 | Integrate Mobius call into PersonalInfoChangeProcessor | 9.1, 7.2 | [ ] |
-| 9.4 | Add Mobius client to pipeline runner registration | 9.3, 8.1 | [ ] |
+| 9.1 | Implement Mobius API client | 1.2, 1.3 | [x] |
+| 9.2 | Implement retry and error handling for Mobius API | 9.1 | [x] |
+| 9.3 | Integrate Mobius call into PersonalInfoChangeProcessor | 9.1, 7.2 | [x] |
+| 9.4 | Add Mobius client to pipeline runner registration | 9.3, 8.1 | [x] |
 | 9.5 | Write unit tests for Mobius client | 9.1, 9.2 | [ ] |
 | 9.6 | Write integration test for pipeline with Mobius sync | 9.3, 8.2 | [ ] |
 | 10.1 | Define test cases from requirements | 8.3 | [ ] |
