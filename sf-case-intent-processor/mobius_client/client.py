@@ -174,7 +174,7 @@ class MobiusClient:
         province: str = "",
         zip_code: str = "",
         country: str = "TH",
-        address_type: str = "H",
+        address_type: str = "A",
         address_format: str = "L",
         address_category: str = "ADD",
         floor: str = "",
@@ -183,11 +183,19 @@ class MobiusClient:
         village: str = "",
         trok: str = "",
         city: str = "",
+        address_line1: str = "",
+        address_line2: str = "",
+        address_line3: str = "",
+        address_line4: str = "",
+        state: str = "",
+        property_ownership_status: str = "",
+        property_type: str = "",
+        stay_since: str = "",
         remark: str = "",
     ) -> MobiusResult:
         """Update customer address in Mobius.
 
-        PUT /party/cust-address (or similar endpoint)
+        POST /party/cust-profile/address
 
         Address Types:
             E=Education, F=Census Registration, H=Home, I=ID Card,
@@ -207,23 +215,17 @@ class MobiusClient:
             province: จังหวัด
             zip_code: รหัสไปรษณีย์
             country: ประเทศ (default: TH)
-            address_type: ประเภทที่อยู่ (default: H=Home)
+            address_type: ประเภทที่อยู่ (default: A=Mailing)
             address_format: รูปแบบ (default: L=Local Standard)
 
         Returns:
             MobiusResult with ok=True on success.
         """
-        url = f"{self.base_url}/party/cust-address"
+        url = f"{self.base_url}/party/cust-profile/address"
         headers = {
             **MOBIUS_HEADERS,
             "requestUID": self._generate_uid(),
-            "deviceId": "sf-case-processor",
-            "userId": "640000001",
-            "sessionId": self._generate_uid()[:8],
-            "accept-language": "EN",
-            "channels": "B",
-            "channelsTool": "M",
-            "lastUpdateUser": "CCRS",
+            "correlationID": self._generate_uid(),
             "channelCode": "CRDX",
         }
 
@@ -247,19 +249,27 @@ class MobiusClient:
             "city": city,
             "zipCode": zip_code,
             "country": country,
+            "addressLine1": address_line1,
+            "addressLine2": address_line2,
+            "addressLine3": address_line3,
+            "addressLine4": address_line4,
+            "state": state,
+            "propertyOwnershipStatus": property_ownership_status,
+            "propertyType": property_type,
+            "staySince": stay_since,
             "remark": remark,
         }
 
         logger.info(f"Mobius: updating address for customer {customer_id}")
-        return self._put_request(url, headers, payload, f"address update for {customer_id}")
+        return self._post_request(url, headers, payload, f"address update for {customer_id}")
 
-    def _put_request(self, url: str, headers: dict, payload: dict, description: str) -> MobiusResult:
-        """Execute a PUT request with retry logic."""
+    def _post_request(self, url: str, headers: dict, payload: dict, description: str) -> MobiusResult:
+        """Execute a POST request with retry logic."""
         customer_id = payload.get("customerId", "")
 
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                resp = requests.put(url, json=payload, headers=headers, timeout=self.timeout)
+                resp = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
 
                 if resp.status_code in (200, 201):
                     data = resp.json() if resp.text else {}
