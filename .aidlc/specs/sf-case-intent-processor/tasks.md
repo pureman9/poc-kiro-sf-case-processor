@@ -228,7 +228,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - Handle `ExtractionError` and `StorageInitError` at pipeline level — log and exit gracefully
     - Print final summary: `{completed} completed, {skipped} skipped, {failed} failed`
 
-  - [ ] 8.2 Write integration test for full pipeline
+  - [x] 8.2 Write integration test for full pipeline
     - **Deps**: 8.1 | **Ref**: `design/integration.md` — Integration Testing
     - Create `tests/integration/test_pipeline.py`
     - Use `pytest-mock` to mock `simple_salesforce.Salesforce`
@@ -238,7 +238,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - Test: valid case with correct document → customer record updated with correct field only
     - Test: valid case, CID not in store → FAILED result, no other records modified
 
-  - [ ] 8.3 Verify coverage and run full test suite
+  - [x] 8.3 Verify coverage and run full test suite
     - **Deps**: 8.2 | **Ref**: `design/nfr.md` — Testing
     - Run `pytest --cov=. --cov-report=term-missing`
     - Ensure overall coverage ≥ 80%
@@ -394,8 +394,8 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | 7.2 | Implement PersonalInfoChangeProcessor | 7.1, 5.1, 6.1, 4.1 | [x] |
 | 7.3 | Write unit tests for PersonalInfoChangeProcessor | 7.2 | [x] |
 | 8.1 | Implement main.py pipeline runner | 3.1, 4.3, 7.2 | [x] |
-| 8.2 | Write integration test for full pipeline | 8.1 | [ ] |
-| 8.3 | Verify coverage and run full test suite | 8.2 | [ ] |
+| 8.2 | Write integration test for full pipeline | 8.1 | [x] |
+| 8.3 | Verify coverage and run full test suite | 8.2 | [x] |
 | 9.1 | Implement Mobius API client | 1.2, 1.3 | [ ] |
 | 9.2 | Implement retry and error handling for Mobius API | 9.1 | [ ] |
 | 9.3 | Integrate Mobius call into PersonalInfoChangeProcessor | 9.1, 7.2 | [ ] |
