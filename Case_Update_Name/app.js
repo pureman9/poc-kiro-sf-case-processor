@@ -219,13 +219,16 @@ function currentFieldValue(fk) {
 // ── Tab switching ─────────────────────────────────────────────────────────────
 document.querySelectorAll('.sf-app-tab').forEach(tab => {
   tab.addEventListener('click', () => {
+    if (!tab.dataset || !tab.dataset.tab) return; // Skip links without data-tab (e.g., CEO Dashboard)
     document.querySelectorAll('.sf-app-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.sf-tab-panel').forEach(p => p.classList.add('hidden'));
     tab.classList.add('active');
-    $(`tab-${tab.dataset.tab}`).classList.remove('hidden');
-    if (tab.dataset.tab === 'customer-db')   renderCustomerTable();
-    if (tab.dataset.tab === 'audit-log')     renderAuditTable();
+    const panel = $(`tab-${tab.dataset.tab}`);
+    if (panel) panel.classList.remove('hidden');
+    if (tab.dataset.tab === 'customer-db')    renderCustomerTable();
+    if (tab.dataset.tab === 'audit-log')      renderAuditTable();
     if (tab.dataset.tab === 'approval-queue') renderApprovalQueue();
+    if (tab.dataset.tab === 'sf-cases')       renderSfCasesTable();
   });
 });
 
@@ -1337,14 +1340,6 @@ document.getElementById('btn-refresh-sf').addEventListener('click', async () => 
     btn.disabled = false;
     btn.textContent = '🔄 Refresh from Salesforce';
   }
-});
-
-// Hook into tab switching
-const origTabHandler = document.querySelectorAll('.sf-app-tab');
-origTabHandler.forEach(tab => {
-  tab.addEventListener('click', () => {
-    if (tab.dataset && tab.dataset.tab === 'sf-cases') renderSfCasesTable();
-  });
 });
 
 // Auto-render if SF cases tab is visible on load
