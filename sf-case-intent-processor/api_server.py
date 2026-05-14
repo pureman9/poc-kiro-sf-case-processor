@@ -67,27 +67,29 @@ class APIHandler(BaseHTTPRequestHandler):
     def _handle_cases(self):
         try:
             ext = get_extractor()
-            cases = ext.extract(include_closed=False)
+            # Use direct SOQL query without fetching attachments per case (faster)
+            from sf_case_extractor.soql_builder import build_ciu_query
+            sf = ext._connect()
+            soql = build_ciu_query(include_closed=False, limit=100)
+            result = sf.query(soql)
+
             ui_cases = []
-            for case in cases:
+            for record in result.get('records', []):
                 ui_cases.append({
-                    "caseId": case.case_id,
-                    "caseNumber": case.case_number,
-                    "subject": case.subject,
-                    "intentType": case.intent_type,
-                    "status": case.status,
-                    "subStatus": case.sub_status,
-                    "category": case.category,
-                    "customerName": case.customer_name,
-                    "citizenId": case.citizen_id,
-                    "newFirstName": case.new_first_name,
-                    "newLastName": case.new_last_name,
-                    "newTitle": case.new_title,
-                    "oldName": case.old_name,
-                    "documents": [
-                        {"id": d.doc_id, "name": d.name, "type": d.content_type, "size": d.size_bytes}
-                        for d in case.verification_documents
-                    ],
+                    "caseId": record.get('Id', ''),
+                    "caseNumber": record.get('CaseNumber', ''),
+                    "subject": record.get('Subject', ''),
+                    "intentType": record.get('Type__c', ''),
+                    "status": record.get('Status', ''),
+                    "subStatus": record.get('Sub_Status__c', ''),
+                    "category": record.get('Category__c', ''),
+                    "customerName": record.get('Customer_Name__c', ''),
+                    "citizenId": record.get('Process_Add_Info_9__c', ''),
+                    "newFirstName": record.get('Process_Add_Info_1__c', ''),
+                    "newLastName": record.get('Process_Add_Info_2__c', ''),
+                    "newTitle": record.get('Process_Add_Info_3__c', ''),
+                    "oldName": record.get('Process_Add_Info_4__c', ''),
+                    "documents": [],
                 })
             self._respond(200, {"cases": ui_cases, "count": len(ui_cases)})
         except Exception as e:
