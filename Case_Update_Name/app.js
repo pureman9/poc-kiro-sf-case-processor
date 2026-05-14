@@ -234,8 +234,13 @@ function populateCustomerSelector() {
   const sel = $('customer-selector');
   sel.innerHTML = '';
 
-  // Load SF cases from localStorage (populated by sf_cases_data.js or Refresh button)
-  const sfCases = JSON.parse(localStorage.getItem('sfcc_sf_cases') || '[]');
+  // Load SF cases — try global variable first (from sf_cases_data.js), then localStorage
+  let sfCases = [];
+  if (typeof SF_CASES_DATA !== 'undefined' && SF_CASES_DATA.length > 0) {
+    sfCases = SF_CASES_DATA;
+  } else {
+    sfCases = JSON.parse(localStorage.getItem('sfcc_sf_cases') || '[]');
+  }
 
   if (sfCases.length > 0) {
     // Use real SF cases
