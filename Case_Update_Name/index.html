@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SF Case Intent Processor — Call Center UI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="sf-nav">
+    <div class="sf-nav__logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#fff"/><path d="M8 12l3 3 5-5" stroke="#0070d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Salesforce</span>
+    </div>
+    <nav class="sf-nav__tabs">
+      <span class="sf-nav__tab active">Home</span>
+      <span class="sf-nav__tab">Cases</span>
+      <span class="sf-nav__tab">Contacts</span>
+      <span class="sf-nav__tab">Reports</span>
+    </nav>
+    <div class="sf-nav__user">
+      <div class="sf-nav__avatar">CC</div>
+      <span>Call Center Agent</span>
+    </div>
+  </header>
+
+  <div class="sf-page">
+
+    <div class="sf-breadcrumb">
+      <span>Cases</span>
+      <span class="sf-breadcrumb__sep">›</span>
+      <span class="sf-breadcrumb__current" id="breadcrumb-case">Case #00012345</span>
+    </div>
+
+    <div class="sf-record-header">
+      <div class="sf-record-header__icon case-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke="#fff" stroke-width="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="#fff" stroke-width="2"/></svg>
+      </div>
+      <div class="sf-record-header__info">
+        <div class="sf-record-header__title" id="header-case-id">Case #00012345</div>
+        <div class="sf-record-header__subtitle">Customer Information Update Request</div>
+      </div>
+      <div class="sf-record-header__badges">
+        <span class="sf-badge sf-badge--new">New</span>
+        <span class="sf-badge sf-badge--high">High Priority</span>
+      </div>
+    </div>
+
+    <!-- App tabs -->
+    <div class="sf-app-tabs">
+      <button class="sf-app-tab active" data-tab="case-processing">📋 Case Processing</button>
+      <button class="sf-app-tab" data-tab="approval-queue">🔔 Approval Queue</button>
+      <button class="sf-app-tab" data-tab="customer-db">👥 Customer Database</button>
+      <button class="sf-app-tab" data-tab="audit-log">📊 Audit Log</button>
+      <a href="dashboard.html" target="_blank" class="sf-app-tab" style="text-decoration:none;margin-left:auto">📈 CEO Dashboard ↗</a>
+    </div>
+
+    <!-- ═══ TAB 1: Case Processing ═══════════════════════════════════════════ -->
+    <div class="sf-tab-panel" id="tab-case-processing">
+      <div class="sf-layout">
+
+        <aside class="sf-sidebar">
+          <div class="sf-card">
+            <div class="sf-card__header">Select Customer</div>
+            <div style="padding:12px 16px;">
+              <label class="sf-form-group">
+                <span style="font-size:12px;font-weight:600;color:var(--sf-gray-5)">Customer (CID)</span>
+                <select class="sf-select" id="customer-selector" style="margin-top:4px"></select>
+              </label>
+            </div>
+          </div>
+
+          <div class="sf-card">
+            <div class="sf-card__header">Case Details</div>
+            <div class="sf-detail-list">
+              <div class="sf-detail-item"><span class="sf-detail-label">Case ID</span><span class="sf-detail-value" id="case-id-display">00012345</span></div>
+              <div class="sf-detail-item"><span class="sf-detail-label">CID</span><span class="sf-detail-value mono" id="case-cid-display">C001234</span></div>
+              <div class="sf-detail-item"><span class="sf-detail-label">Status</span><span class="sf-badge sf-badge--open">Open</span></div>
+              <div class="sf-detail-item"><span class="sf-detail-label">Created</span><span class="sf-detail-value" id="case-created">—</span></div>
+              <div class="sf-detail-item"><span class="sf-detail-label">Channel</span><span class="sf-detail-value">Phone</span></div>
+            </div>
+          </div>
+
+          <div class="sf-card">
+            <div class="sf-card__header">Current Customer Info</div>
+            <div class="sf-detail-list" id="customer-info-panel"></div>
+          </div>
+
+          <div class="sf-card">
+            <div class="sf-card__header">Verification Document</div>
+            <div class="sf-doc-item">
+              <div class="sf-doc-icon">📄</div>
+              <div class="sf-doc-info">
+                <div class="sf-doc-name">ID_Card_Scan.pdf</div>
+                <div class="sf-doc-meta">Uploaded today</div>
+              </div>
+              <span class="sf-badge sf-badge--valid">OK</span>
+            </div>
+          </div>
+
+          <!-- Approval routing legend -->
+          <div class="sf-card">
+            <div class="sf-card__header">Approval Routing Guide</div>
+            <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px;">
+              <div class="routing-legend-item routing-legend--auto">
+                <span>✅</span>
+                <div><strong>Auto-Approve</strong><div class="routing-legend-desc">Applied immediately — no review needed</div></div>
+              </div>
+              <div class="routing-legend-item routing-legend--ops">
+                <span>📋</span>
+                <div><strong>Operations Team</strong><div class="routing-legend-desc">Legal name change — doc verification required</div></div>
+              </div>
+              <div class="routing-legend-item routing-legend--compliance">
+                <span>🔒</span>
+                <div><strong>Compliance Team</strong><div class="routing-legend-desc">Sensitive ID data — regulatory review required</div></div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <main class="sf-main">
+          <div class="sf-card">
+            <div class="sf-card__header">
+              Customer Information Update
+              <span class="sf-card__header-sub">ขอใช้บริการ:CC - ข้อมูลส่วนตัว</span>
+            </div>
+
+            <div class="sf-steps">
+              <div class="sf-step active" id="step-indicator-1"><div class="sf-step__dot">1</div><div class="sf-step__label">Select Intent</div></div>
+              <div class="sf-step__line"></div>
+              <div class="sf-step" id="step-indicator-2"><div class="sf-step__dot">2</div><div class="sf-step__label">Enter New Value</div></div>
+              <div class="sf-step__line"></div>
+              <div class="sf-step" id="step-indicator-doc"><div class="sf-step__dot">3</div><div class="sf-step__label">Upload & Verify Doc</div></div>
+              <div class="sf-step__line"></div>
+              <div class="sf-step" id="step-indicator-3"><div class="sf-step__dot">4</div><div class="sf-step__label">Confirm & Submit</div></div>
+            </div>
+
+            <!-- STEP 1 -->
+            <div class="sf-step-panel" id="step-1">
+              <h3 class="sf-section-title">Step 1 — Select Change Type</h3>
+              <p class="sf-section-desc">Each intent has an approval routing level. Select to see the routing requirement.</p>
+
+              <div class="sf-intent-grid">
+                <label class="sf-intent-card" data-intent="change-firstname">
+                  <input type="radio" name="intent" value="change-firstname" />
+                  <div class="sf-intent-card__icon">👤</div>
+                  <div class="sf-intent-card__title">เปลี่ยนแปลงชื่อ</div>
+                  <div class="sf-intent-card__sub">Change First Name</div>
+                  <div class="sf-intent-card__code">ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ</div>
+                </label>
+                <label class="sf-intent-card" data-intent="change-lastname">
+                  <input type="radio" name="intent" value="change-lastname" />
+                  <div class="sf-intent-card__icon">👤</div>
+                  <div class="sf-intent-card__title">เปลี่ยนแปลงนามสกุล</div>
+                  <div class="sf-intent-card__sub">Change Last Name</div>
+                  <div class="sf-intent-card__code">ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงนามสกุล</div>
+                </label>
+                <label class="sf-intent-card" data-intent="change-title">
+                  <input type="radio" name="intent" value="change-title" />
+                  <div class="sf-intent-card__icon">🏷️</div>
+                  <div class="sf-intent-card__title">เปลี่ยนแปลงคำนำหน้า</div>
+                  <div class="sf-intent-card__sub">Change Title / Prefix</div>
+                  <div class="sf-intent-card__code">ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงคำนำหน้า</div>
+                </label>
+                <label class="sf-intent-card" data-intent="change-fullname">
+                  <input type="radio" name="intent" value="change-fullname" />
+                  <div class="sf-intent-card__icon">📝</div>
+                  <div class="sf-intent-card__title">เปลี่ยนแปลงชื่อ-นามสกุล</div>
+                  <div class="sf-intent-card__sub">Change Full Name</div>
+                  <div class="sf-intent-card__code">ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงชื่อ-นามสกุล</div>
+                </label>
+                <label class="sf-intent-card" data-intent="change-id">
+                  <input type="radio" name="intent" value="change-id" />
+                  <div class="sf-intent-card__icon">🪪</div>
+                  <div class="sf-intent-card__title">เปลี่ยนแปลงเลขบัตรประชาชน</div>
+                  <div class="sf-intent-card__sub">Change National ID</div>
+                  <div class="sf-intent-card__code">ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงเลขบัตรประชาชน</div>
+                </label>
+                <label class="sf-intent-card" data-intent="change-dob">
+                  <input type="radio" name="intent" value="change-dob" />
+                  <div class="sf-intent-card__icon">📅</div>
+                  <div class="sf-intent-card__title">เปลี่ยนแปลงวันเกิด</div>
+                  <div class="sf-intent-card__sub">Change Date of Birth</div>
+                  <div class="sf-intent-card__code">ขอใช้บริการ:CC - ข้อมูลส่วนตัว : เปลี่ยนแปลงวันเกิด</div>
+                </label>
+              </div>
+
+              <!-- Approval routing hint (shown on selection) -->
+              <div id="approval-hint" class="sf-approval-hint hidden"></div>
+
+              <div class="sf-form-actions">
+                <button class="sf-btn sf-btn--primary" id="btn-step1-next" disabled>Next →</button>
+              </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="sf-step-panel hidden" id="step-2">
+              <h3 class="sf-section-title">Step 2 — Enter New Value</h3>
+              <p class="sf-section-desc">Enter the updated information for the selected change type.</p>
+              <div class="sf-intent-summary" id="intent-summary"></div>
+              <div class="sf-form" id="dynamic-form"></div>
+              <div class="sf-form-actions">
+                <button class="sf-btn sf-btn--ghost" id="btn-step2-back">← Back</button>
+                <button class="sf-btn sf-btn--primary" id="btn-step2-next">Next →</button>
+              </div>
+            </div>
+
+            <!-- STEP DOC: Upload & OCR Verify -->
+            <div class="sf-step-panel hidden" id="step-doc">
+              <h3 class="sf-section-title">Step 3 — Upload & Verify Document</h3>
+              <p class="sf-section-desc">Upload the required supporting document. The system will use OCR to verify the document content matches the requested change.</p>
+
+              <!-- Required doc info banner -->
+              <div class="doc-requirement-banner" id="doc-requirement-banner"></div>
+
+              <!-- Upload zone -->
+              <div class="doc-upload-zone" id="doc-upload-zone">
+                <input type="file" id="doc-file-input" accept="image/*" style="display:none" />
+                <div class="doc-upload-icon">📄</div>
+                <div class="doc-upload-title">Drop document image here or click to browse</div>
+                <div class="doc-upload-hint">Supports: JPG, PNG, WEBP — max 10MB<br>Ensure the document is flat, well-lit, and all text is visible</div>
+                <button class="sf-btn sf-btn--ghost" id="btn-browse-doc" style="margin-top:12px">Browse File</button>
+              </div>
+
+              <!-- Preview -->
+              <div class="doc-preview hidden" id="doc-preview">
+                <div class="doc-preview__header">
+                  <span id="doc-preview-filename">document.jpg</span>
+                  <button class="sf-btn sf-btn--ghost" id="btn-remove-doc" style="height:26px;font-size:12px">✕ Remove</button>
+                </div>
+                <img id="doc-preview-img" src="" alt="Document preview" class="doc-preview__img" />
+              </div>
+
+              <!-- OCR progress -->
+              <div class="ocr-progress hidden" id="ocr-progress">
+                <div class="ocr-progress__label" id="ocr-progress-label">Initializing OCR engine...</div>
+                <div class="ocr-progress__track">
+                  <div class="ocr-progress__bar" id="ocr-progress-bar" style="width:0%"></div>
+                </div>
+                <div class="ocr-progress__hint">Phase 1: Image quality check (instant) → Phase 2: Thai OCR text extraction (~10s first run)</div>
+              </div>
+
+              <!-- Verification results -->
+              <div class="ocr-results hidden" id="ocr-results">
+                <div class="ocr-results__header">
+                  <div class="ocr-results__score-wrap">
+                    <div class="ocr-results__score" id="ocr-score-circle">0%</div>
+                    <div>
+                      <div class="ocr-results__verdict" id="ocr-verdict">Verifying...</div>
+                      <div class="ocr-results__verdict-sub" id="ocr-verdict-sub"></div>
+                      <div class="ocr-sub-scores" id="ocr-sub-scores"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="ocr-checks" id="ocr-checks"></div>
+                <div class="ocr-extracted hidden" id="ocr-extracted">
+                  <div class="ocr-extracted__title">Extracted Fields</div>
+                  <div id="ocr-extracted-fields"></div>
+                </div>
+                <details class="ocr-raw-text">
+                  <summary>Raw OCR Text (debug)</summary>
+                  <pre id="ocr-raw-text-content"></pre>
+                </details>
+              </div>
+
+              <div class="sf-form-actions">
+                <button class="sf-btn sf-btn--ghost" id="btn-doc-back">← Back</button>
+                <button class="sf-btn sf-btn--primary" id="btn-run-ocr" disabled>🔍 Verify Document</button>
+                <button class="sf-btn sf-btn--ghost" id="btn-skip-ocr" style="color:var(--sf-gray-4);border-color:var(--sf-gray-3)">Skip Verification</button>
+                <button class="sf-btn sf-btn--primary hidden" id="btn-doc-next">Next →</button>
+              </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="sf-step-panel hidden" id="step-3">
+              <h3 class="sf-section-title">Step 3 — Confirm & Submit</h3>
+              <p class="sf-section-desc">Review the routing and change details before submitting.</p>
+
+              <!-- Approval routing banner (injected by JS) -->
+              <div id="approval-routing-banner"></div>
+
+              <div class="sf-confirm-box" id="confirm-box"></div>
+
+              <div class="sf-validation-check">
+                <div class="sf-check-item sf-check-item--pass"><span class="sf-check-icon">✓</span><span>Case status is not "Closed"</span></div>
+                <div class="sf-check-item sf-check-item--pass"><span class="sf-check-icon">✓</span><span>Verification document status: <strong>OK</strong></span></div>
+                <div class="sf-check-item sf-check-item--pass"><span class="sf-check-icon">✓</span><span>Intent registered and processor found</span></div>
+                <div class="sf-check-item sf-check-item--pass"><span class="sf-check-icon">✓</span><span>Customer record found in database</span></div>
+              </div>
+
+              <div class="sf-form-actions">
+                <button class="sf-btn sf-btn--ghost" id="btn-step3-back">← Back</button>
+                <button class="sf-btn sf-btn--success" id="btn-submit">✓ Submit</button>
+              </div>
+            </div>
+
+            <!-- Result -->
+            <div class="sf-step-panel hidden" id="step-result">
+              <div class="sf-result" id="result-panel"></div>
+              <div class="sf-form-actions">
+                <button class="sf-btn sf-btn--ghost" id="btn-new-case">Process Another Case</button>
+                <button class="sf-btn sf-btn--ghost" id="btn-view-approvals">View Approval Queue →</button>
+                <button class="sf-btn sf-btn--primary" id="btn-view-audit">View Audit Log →</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sf-card">
+            <div class="sf-card__header">Processing Log <button class="sf-card__toggle" id="log-toggle">▼</button></div>
+            <div class="sf-log" id="processing-log">
+              <div class="sf-log-entry sf-log-entry--info"><span class="sf-log-time">--:--:--</span><span class="sf-log-msg">System ready. Select a customer to begin.</span></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 2: Approval Queue ═════════════════════════════════════════════ -->
+    <div class="sf-tab-panel hidden" id="tab-approval-queue">
+
+      <!-- Pending -->
+      <div class="sf-card" style="margin-bottom:16px">
+        <div class="sf-card__header">
+          🔔 Pending Approvals
+          <span id="approval-pending-count" class="sf-badge sf-badge--pending">0 pending</span>
+        </div>
+        <div class="sf-table-wrap">
+          <table class="sf-table">
+            <thead><tr>
+              <th>Approval ID</th><th>Submitted</th><th>Case ID</th><th>CID</th>
+              <th>Customer</th><th>Intent</th><th>Level</th><th>Changes</th>
+              <th>Agent</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="approval-pending-body"></tbody>
+          </table>
+          <div class="sf-table-empty hidden" id="approval-pending-empty">
+            <div style="text-align:center;padding:32px;color:var(--sf-gray-4)">
+              <div style="font-size:28px;margin-bottom:6px">✅</div>
+              <div>No pending approvals — all clear.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resolved -->
+      <div class="sf-card">
+        <div class="sf-card__header">
+          ✅ Resolved Approvals
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="approval-resolved-count" class="sf-badge sf-badge--valid">0 resolved</span>
+            <button class="sf-btn sf-btn--ghost" id="btn-clear-approvals" style="height:28px;font-size:12px">🗑 Clear Resolved</button>
+          </div>
+        </div>
+        <div class="sf-table-wrap">
+          <table class="sf-table">
+            <thead><tr>
+              <th>Approval ID</th><th>Submitted</th><th>Case ID</th><th>CID</th>
+              <th>Customer</th><th>Intent</th><th>Level</th><th>Changes</th>
+              <th>Agent</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody id="approval-resolved-body"></tbody>
+          </table>
+          <div class="sf-table-empty hidden" id="approval-resolved-empty">
+            <div style="text-align:center;padding:32px;color:var(--sf-gray-4)">
+              <div style="font-size:28px;margin-bottom:6px">📋</div>
+              <div>No resolved approvals yet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 3: Customer Database ══════════════════════════════════════════ -->
+    <div class="sf-tab-panel hidden" id="tab-customer-db">
+      <div class="sf-card">
+        <div class="sf-card__header">
+          Customer Database
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="customer-count-badge" class="sf-badge sf-badge--new">8 records</span>
+            <button class="sf-btn sf-btn--ghost" id="btn-reset-db" style="height:28px;font-size:12px">↺ Reset to Seed Data</button>
+          </div>
+        </div>
+        <div class="sf-table-wrap">
+          <table class="sf-table" id="customer-table">
+            <thead><tr>
+              <th>CID</th><th>Title</th><th>First Name</th><th>Last Name</th>
+              <th>National ID</th><th>Date of Birth</th><th>Phone</th><th>Email</th>
+            </tr></thead>
+            <tbody id="customer-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 4: Audit Log ══════════════════════════════════════════════════ -->
+    <div class="sf-tab-panel hidden" id="tab-audit-log">
+      <div class="sf-card">
+        <div class="sf-card__header">
+          Change Audit Log
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="audit-count-badge" class="sf-badge sf-badge--new">0 records</span>
+            <button class="sf-btn sf-btn--ghost" id="btn-export-csv" style="height:28px;font-size:12px">⬇ Export CSV</button>
+            <button class="sf-btn sf-btn--ghost" id="btn-clear-audit" style="height:28px;font-size:12px;color:var(--sf-red);border-color:var(--sf-red)">🗑 Clear</button>
+          </div>
+        </div>
+        <div class="sf-table-wrap">
+          <table class="sf-table">
+            <thead><tr>
+              <th>#</th><th>Timestamp</th><th>Case ID</th><th>CID</th><th>Customer</th>
+              <th>Intent</th><th>Approval Level</th><th>Field</th><th>Before</th><th>After</th>
+              <th>Agent</th><th>Status</th>
+            </tr></thead>
+            <tbody id="audit-table-body"></tbody>
+          </table>
+          <div class="sf-table-empty hidden" id="audit-empty">
+            <div style="text-align:center;padding:40px;color:var(--sf-gray-4)">
+              <div style="font-size:32px;margin-bottom:8px">📋</div>
+              <div>No audit records yet. Process a case to see changes here.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js" 
+          onerror="window._tesseractLoadFailed=true;console.warn('Tesseract CDN failed to load — OCR will be unavailable')">
+  </script>
+  <script src="db.js"></script>
+  <script src="ocr.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

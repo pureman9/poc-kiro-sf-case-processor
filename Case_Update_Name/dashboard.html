@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Information Update — Executive Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="dash-header">
+    <div class="dash-header__left">
+      <div class="dash-logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#0070d2"/>
+          <path d="M8 12l3 3 5-5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="dash-title">Customer Information Update</div>
+        <div class="dash-subtitle">Executive Operations Dashboard</div>
+      </div>
+    </div>
+    <div class="dash-header__right">
+      <div class="dash-live-indicator">
+        <span class="dash-live-dot" id="live-dot"></span>
+        <span id="live-label">LIVE</span>
+      </div>
+      <div class="dash-timestamp">
+        Last updated: <span id="last-updated">—</span>
+      </div>
+      <div class="dash-date" id="dash-date">—</div>
+    </div>
+  </header>
+
+  <!-- KPI Row -->
+  <section class="dash-kpi-row" id="kpi-row">
+
+    <div class="kpi-card kpi-card--blue">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-body">
+        <div class="kpi-value" id="kpi-total">0</div>
+        <div class="kpi-label">Total Cases Today</div>
+        <div class="kpi-delta" id="kpi-total-delta"></div>
+        <div class="kpi-info">
+          <div class="kpi-info__desc">Unique cases submitted by call center agents today (calendar day, local time).</div>
+          <div class="kpi-info__formula">
+            <span class="formula-label">Formula</span>
+            <span class="formula-expr">COUNT(DISTINCT caseId) WHERE date = TODAY</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-card--green">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-body">
+        <div class="kpi-value" id="kpi-completed">0</div>
+        <div class="kpi-label">Completed</div>
+        <div class="kpi-delta" id="kpi-completed-pct"></div>
+        <div class="kpi-info">
+          <div class="kpi-info__desc">Cases auto-approved and applied immediately — no manual review required. Customer record updated in real time.</div>
+          <div class="kpi-info__formula">
+            <span class="formula-label">Formula</span>
+            <span class="formula-expr">COUNT(status = "COMPLETED") WHERE date = TODAY</span>
+          </div>
+          <div class="kpi-info__formula" style="margin-top:4px">
+            <span class="formula-label">Rate</span>
+            <span class="formula-expr">Completed ÷ Total Cases Today × 100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-card--orange">
+      <div class="kpi-icon">⏳</div>
+      <div class="kpi-body">
+        <div class="kpi-value" id="kpi-pending">0</div>
+        <div class="kpi-label">Pending Approval</div>
+        <div class="kpi-delta" id="kpi-pending-sub"></div>
+        <div class="kpi-info">
+          <div class="kpi-info__desc">Cases awaiting manual review in the approval queue. Customer record is NOT updated until a reviewer approves. Includes all unresolved requests across all dates.</div>
+          <div class="kpi-info__formula">
+            <span class="formula-label">Formula</span>
+            <span class="formula-expr">COUNT(approvalQueue WHERE status = "PENDING")</span>
+          </div>
+          <div class="kpi-info__formula" style="margin-top:4px">
+            <span class="formula-label">Breakdown</span>
+            <span class="formula-expr">Ops Team pending + Compliance Team pending</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-card--red">
+      <div class="kpi-icon">✗</div>
+      <div class="kpi-body">
+        <div class="kpi-value" id="kpi-rejected">0</div>
+        <div class="kpi-label">Rejected</div>
+        <div class="kpi-delta" id="kpi-rejected-pct"></div>
+        <div class="kpi-info">
+          <div class="kpi-info__desc">Cases reviewed and rejected by Operations or Compliance team. Customer record remains unchanged. Rejection reason is logged in the audit trail.</div>
+          <div class="kpi-info__formula">
+            <span class="formula-label">Formula</span>
+            <span class="formula-expr">COUNT(auditLog WHERE status = "REJECTED")</span>
+          </div>
+          <div class="kpi-info__formula" style="margin-top:4px">
+            <span class="formula-label">Rejection Rate</span>
+            <span class="formula-expr">Rejected ÷ (Approved + Rejected) × 100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-card--purple">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-body">
+        <div class="kpi-value" id="kpi-approval-rate">—</div>
+        <div class="kpi-label">Approval Rate</div>
+        <div class="kpi-delta" id="kpi-approval-sub">of resolved cases</div>
+        <div class="kpi-rate-bar">
+          <div class="kpi-rate-track">
+            <div class="kpi-rate-fill" id="kpi-rate-fill" style="width:0%"></div>
+            <div class="kpi-rate-target" title="Target: 80%"></div>
+          </div>
+          <div class="kpi-rate-nums" id="kpi-rate-nums">—</div>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-info__desc">Percentage of manually reviewed cases that were approved. Excludes auto-approved cases (which bypass the review queue). Higher is better — target ≥ 80%.</div>
+          <div class="kpi-info__formula">
+            <span class="formula-label">Formula</span>
+            <span class="formula-expr">Approved ÷ (Approved + Rejected) × 100%</span>
+          </div>
+          <div class="kpi-info__formula" style="margin-top:4px">
+            <span class="formula-label">Scope</span>
+            <span class="formula-expr">Ops Team + Compliance Team reviews only (excludes AUTO)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Charts Row -->
+  <section class="dash-charts-row">
+
+    <!-- Cases by Intent -->
+    <div class="dash-card dash-card--wide">
+      <div class="dash-card__header">
+        <span class="dash-card__title">Cases by Intent Category</span>
+        <span class="dash-card__badge" id="intent-total-badge">0 total</span>
+      </div>
+      <div class="dash-card__body">
+        <canvas id="chart-intent" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- Approval Breakdown -->
+    <div class="dash-card">
+      <div class="dash-card__header">
+        <span class="dash-card__title">Approval Breakdown</span>
+      </div>
+      <div class="dash-card__body chart-donut-wrap">
+        <canvas id="chart-approval" height="220"></canvas>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+    </div>
+
+    <!-- Approval Level Distribution -->
+    <div class="dash-card">
+      <div class="dash-card__header">
+        <span class="dash-card__title">Routing Level</span>
+      </div>
+      <div class="dash-card__body chart-donut-wrap">
+        <canvas id="chart-routing" height="220"></canvas>
+        <div class="donut-legend" id="routing-legend"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Daily Trend + Recent Activity -->
+  <section class="dash-bottom-row">
+
+    <!-- Daily trend chart -->
+    <div class="dash-card dash-card--wide">
+      <div class="dash-card__header">
+        <span class="dash-card__title">Daily Case Volume — Last 7 Days</span>
+      </div>
+      <div class="dash-card__body">
+        <canvas id="chart-daily" height="180"></canvas>
+      </div>
+    </div>
+
+    <!-- Recent activity feed -->
+    <div class="dash-card">
+      <div class="dash-card__header">
+        <span class="dash-card__title">Recent Activity</span>
+        <span class="dash-card__badge" id="activity-count">0</span>
+      </div>
+      <div class="dash-card__body" style="padding:0">
+        <div class="activity-feed" id="activity-feed"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Intent breakdown table -->
+  <section class="dash-table-section">
+    <div class="dash-card" style="width:100%">
+      <div class="dash-card__header">
+        <span class="dash-card__title">Intent Performance Summary</span>
+        <span class="dash-card__badge" id="table-date-range">Today</span>
+      </div>
+      <div class="dash-card__body" style="padding:0">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Intent</th>
+              <th>Category (EN)</th>
+              <th>Routing</th>
+              <th>Total</th>
+              <th>Completed</th>
+              <th>Pending</th>
+              <th>Approved</th>
+              <th>Rejected</th>
+              <th>Approval Rate</th>
+              <th>Trend</th>
+            </tr>
+          </thead>
+          <tbody id="intent-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="dash-footer">
+    <span>SF Case Intent Processor — Customer Information Update Operations</span>
+    <span>Auto-refresh every <strong>30s</strong> &nbsp;·&nbsp; Data source: Local Operations Database</span>
+    <span id="footer-refresh-countdown">Next refresh in 30s</span>
+  </footer>
+
+  <script src="db.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

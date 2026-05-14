@@ -1,0 +1,69 @@
+version: "2.2"
+feature: "sf-case-intent-processor"
+language: "English"
+platform: "kiro"
+created: "2026-05-13T00:00:00Z"
+updated: "2026-05-13T01:00:00Z"
+state:
+  status: "active"
+  sharedPhases: ["context", "requirements", "design"]
+  mode: "comprehensive"
+  foundationSkipped: false
+  implementationMode: null
+  quickPath: false
+artifacts:
+  context:
+    status: "approved"
+    timestamp: "2026-05-13T00:00:00Z"
+    files: ["context.md"]
+  requirements:
+    status: "approved"
+    timestamp: "2026-05-13T00:30:00Z"
+    files: ["requirements.md"]
+  design:
+    status: "approved"
+    timestamp: "2026-05-13T01:00:00Z"
+    files:
+      - "design.md"
+      - "design/components.md"
+      - "design/data-model.md"
+      - "design/integration.md"
+      - "design/implementation.md"
+      - "design/nfr.md"
+implementation:
+  totalTasks: 0
+  completedTasks: 0
+  currentTask: null
+  currentWave: null
+context-summary:
+  type: "Greenfield"
+  stack: "Python 3.11+ / simple_salesforce / JSON file store"
+  architecture: "Modular Monolith — sequential pipeline with Strategy pattern"
+  feature: "Extracts non-closed Customer Information Update cases from Salesforce, validates documents, and updates customer data in local storage"
+  impact: "New standalone"
+  complexity: "Medium"
+  teamSize: null
+  recommendations:
+    personas: false
+    units: false
+    nfr: true
+decisions:
+  requirements:
+    scope: "Customer Information Update intents only"
+    user_types: "System Operator, Developer"
+    integrations: "Salesforce REST API"
+    nfr: "Yes — retry, timeout, per-case isolation"
+  design:
+    language: "Python 3.11+"
+    architecture: "Modular Monolith / Pipeline"
+    intent_pattern: "Strategy (IntentProcessor ABC + IntentRegistry)"
+    storage: "Local JSON file (customer_data.json)"
+    retry: "3 attempts, 2s fixed delay, 30s timeout"
+    logging: "Structured JSON"
+    testing: "pytest + pytest-mock"
+steering:
+  updatedBy:
+    product: ["context", "requirements"]
+    tech: ["context", "design"]
+    structure: ["context", "design"]
+units: []
