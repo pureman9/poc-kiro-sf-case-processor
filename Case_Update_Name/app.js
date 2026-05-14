@@ -151,48 +151,56 @@ const FIELD_DEFS = {
     hint:   'เช่น 66/8',
     type:   'text',
     dbKey:  'addressNumber',
+    required: true,
   },
   moo: {
     label:  'หมู่ (Moo)',
-    hint:   'เช่น 2',
+    hint:   'เช่น 2 (ไม่บังคับ)',
     type:   'text',
     dbKey:  'moo',
+    required: false,
   },
   soi: {
     label:  'ซอย (Soi)',
-    hint:   'เช่น อารีย์ 23',
+    hint:   'เช่น อารีย์ 23 (ไม่บังคับ)',
     type:   'text',
     dbKey:  'soi',
+    required: false,
   },
   thanon: {
     label:  'ถนน (Road)',
-    hint:   'เช่น รัชดาภิเษก',
+    hint:   'เช่น รัชดาภิเษก (ไม่บังคับ)',
     type:   'text',
     dbKey:  'thanon',
+    required: false,
   },
   subDistrict: {
     label:  'แขวง/ตำบล (Sub-District)',
     hint:   'เช่น จตุจักร',
     type:   'text',
     dbKey:  'subDistrict',
+    required: true,
   },
   district: {
     label:  'เขต/อำเภอ (District)',
     hint:   'เช่น จตุจักร',
     type:   'text',
     dbKey:  'district',
+    required: true,
   },
   province: {
     label:  'จังหวัด (Province)',
     hint:   'เช่น กรุงเทพมหานคร',
     type:   'text',
     dbKey:  'province',
+    required: true,
   },
   zipCode: {
     label:  'รหัสไปรษณีย์ (Zip Code)',
     hint:   'เช่น 10150',
     type:   'text',
     dbKey:  'zipCode',
+    required: true,
   },
 
   // ── Contact (POST /party/cust-profile/{cif}/Contacts) ───────────────────────
@@ -596,10 +604,18 @@ $('btn-step2-next').addEventListener('click', () => {
   INTENTS[state.selectedIntent].fields.forEach(fk => {
     const input = $(`field-${fk}`);
     const val = input ? input.value.trim() : '';
-    if (!val) { if (input) input.style.borderColor = 'var(--sf-red)'; valid = false; }
-    else { if (input) input.style.borderColor = ''; state.newValues[fk] = val; }
+    const def = FIELD_DEFS[fk];
+    const isRequired = def && def.required !== false; // Default: required unless explicitly false
+
+    if (!val && isRequired) {
+      if (input) input.style.borderColor = 'var(--sf-red)';
+      valid = false;
+    } else {
+      if (input) input.style.borderColor = '';
+      if (val) state.newValues[fk] = val; // Only include non-empty values
+    }
   });
-  if (!valid) { addLog('All fields are required', 'warn'); return; }
+  if (!valid) { addLog('Required fields are missing', 'warn'); return; }
   buildDocStep();
   setStep('doc');
   addLog('Values entered — proceeding to document verification');
