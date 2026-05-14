@@ -105,14 +105,14 @@ Tasks organized by component, following the modular monolith architecture. Each 
 
 ---
 
-- [ ] 4. Intent Analyzer & Registry
-  - [ ] 4.1 Implement IntentProcessor ABC
+- [x] 4. Intent Analyzer & Registry
+  - [x] 4.1 Implement IntentProcessor ABC
     - **Deps**: 1.2 | **Ref**: `design/components.md` — IntentRegistry, IntentProcessor Interface
     - Create `intent_analyzer/base_processor.py` — `IntentProcessor` ABC
     - Abstract methods: `validate(case: SFCase) -> ValidationResult`, `process(case: SFCase) -> ProcessingResult`
     - Use `abc.ABC` and `@abstractmethod` decorators — Python enforces at class definition time
 
-  - [ ] 4.2 Implement IntentRegistry
+  - [x] 4.2 Implement IntentRegistry
     - **Deps**: 4.1 | **Ref**: `design/components.md` — IntentRegistry
     - Create `intent_analyzer/registry.py` — `IntentRegistry` class
     - `register(intent_name: str, processor: IntentProcessor) -> None`: validate processor implements ABC, check for duplicates, store in dict
@@ -120,7 +120,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - Raise `RegistrationError` on duplicate or invalid processor
     - Create `intent_analyzer/exceptions.py` — `MissingIntentError`, `UnrecognizedIntentError`, `RegistrationError`
 
-  - [ ] 4.3 Implement IntentAnalyzer
+  - [x] 4.3 Implement IntentAnalyzer
     - **Deps**: 4.2, 1.2 | **Ref**: `design/components.md` — IntentAnalyzer
     - Create `intent_analyzer/analyzer.py` — `IntentAnalyzer` class
     - `__init__(registry: IntentRegistry)`: store registry reference
@@ -129,7 +129,7 @@ Tasks organized by component, following the modular monolith architecture. Each 
     - Return `ProcessingResult(status=SKIPPED, reason=MISSING_INTENT)` for empty intent
     - Return `ProcessingResult(status=SKIPPED, reason=UNRECOGNIZED_INTENT)` for unknown intent
 
-  - [ ] 4.4 Write unit tests for IntentAnalyzer and IntentRegistry
+  - [x] 4.4 Write unit tests for IntentAnalyzer and IntentRegistry
     - **Deps**: 4.2, 4.3 | **Ref**: `design/components.md` — Error Handling sections
     - Create `tests/unit/test_intent_registry.py`: test register success, duplicate rejection, missing method rejection, get existing, get non-existing
     - Create `tests/unit/test_intent_analyzer.py`: test empty intent → SKIPPED, unrecognized intent → SKIPPED, processor exception → FAILED, successful routing → calls validate() and process()
@@ -381,10 +381,10 @@ Tasks organized by component, following the modular monolith architecture. Each 
 | 3.1 | Implement SFCaseExtractor class | 2.1, 2.2, 1.3 | [x] |
 | 3.2 | Implement error handling for Salesforce failures | 3.1 | [x] |
 | 3.3 | Write unit tests for SFCaseExtractor | 3.1, 3.2 | [x] |
-| 4.1 | Implement IntentProcessor ABC | 1.2 | [ ] |
-| 4.2 | Implement IntentRegistry | 4.1 | [ ] |
-| 4.3 | Implement IntentAnalyzer | 4.2, 1.2 | [ ] |
-| 4.4 | Write unit tests for IntentAnalyzer and IntentRegistry | 4.2, 4.3 | [ ] |
+| 4.1 | Implement IntentProcessor ABC | 1.2 | [x] |
+| 4.2 | Implement IntentRegistry | 4.1 | [x] |
+| 4.3 | Implement IntentAnalyzer | 4.2, 1.2 | [x] |
+| 4.4 | Write unit tests for IntentAnalyzer and IntentRegistry | 4.2, 4.3 | [x] |
 | 5.1 | Implement DocumentValidator | 2.1, 1.2 | [ ] |
 | 5.2 | Write unit tests for DocumentValidator | 5.1 | [ ] |
 | 6.1 | Implement CustomerDataStore | 1.2, 1.3 | [ ] |
